@@ -1,16 +1,47 @@
 plugins {
-    id 'java'
+    id 'application'
+    id 'org.openjfx.javafxplugin' version '0.0.9'
 }
 
 group 'net.yudichev'
 version '1.0-SNAPSHOT'
+
+javafx {
+    version = "15.0.1"
+    modules = ['javafx.controls']
+}
+
+application {
+    mainClassName = 'net.yudichev.ntetris.Main'
+    applicationName = 'N-Tetris'
+    applicationDefaultJvmArgs = ['--add-exports', 'javafx.graphics/com.sun.javafx.tk=ALL-UNNAMED',
+                                 '--add-opens', 'javafx.graphics/com.sun.javafx.tk.quantum=ALL-UNNAMED',
+                                 '--add-opens', 'javafx.controls/javafx.scene.control=ALL-UNNAMED',
+                                 '--add-exports', 'javafx.graphics/com.sun.glass.ui=ALL-UNNAMED',
+                                 '--add-exports', 'javafx.controls/com.sun.javafx.scene.control=ALL-UNNAMED',
+                                 '--add-exports', 'javafx.graphics/com.sun.javafx.menu=ALL-UNNAMED']
+}
 
 repositories {
     mavenCentral()
 }
 
 dependencies {
+    implementation 'com.google.guava:guava:30.1-jre'
+    implementation 'org.slf4j:slf4j-api:1.7.30'
+    runtimeOnly 'org.apache.logging.log4j:log4j-slf4j-impl:2.12.1'
+    runtimeOnly 'org.apache.logging.log4j:log4j-jcl:2.12.1'
+    runtimeOnly "com.fasterxml.jackson.core:jackson-databind:2.9.9"
+    runtimeOnly 'com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.9.9'
+    runtimeOnly 'com.lmax:disruptor:3.4.2'
+
+    compileOnly 'org.immutables:value:2.8.8'
+    annotationProcessor 'org.immutables:value:2.8.8'
+    testAnnotationProcessor 'org.immutables:value:2.8.8'
+
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.7.0'
+    testImplementation 'org.junit.jupiter:junit-jupiter-params:5.7.0'
+    testImplementation 'org.assertj:assertj-core:3.19.0'
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:1.7.0'
 }
 

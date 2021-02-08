@@ -1,0 +1,21 @@
+Configuration:
+  name: Automator
+  appenders:
+    Console:
+      name: STDOUT
+      PatternLayout:
+        Pattern: "%d{ISO8601}{GMT} %p [%t] %C{1.} %m%n"
+
+  Loggers:
+    logger:
+      - name: net.yudichev.jiotty.connector.google.photos
+        level: debug
+        includeLocation: true
+      - name: net.yudichev.googlephotosupload
+        level: debug
+        includeLocation: true
+    Root:
+      level: debug
+      includeLocation: true
+      AppenderRef:
+        - ref: STDOUT
