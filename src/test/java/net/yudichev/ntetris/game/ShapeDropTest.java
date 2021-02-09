@@ -18,8 +18,8 @@ class ShapeDropTest {
     @ParameterizedTest
     @MethodSource
     void overlapsWith(ShapeDrop shapeDrop1, ShapeDrop shapeDrop2, boolean expectOverlap) {
-        assertThat(shapeDrop1.overlapsWithRubble(shapeDrop2)).isEqualTo(expectOverlap);
-        assertThat(shapeDrop2.overlapsWithRubble(shapeDrop1)).isEqualTo(expectOverlap);
+        assertThat(shapeDrop1.overlapsWithAnotherDrop(shapeDrop2)).isEqualTo(expectOverlap);
+        assertThat(shapeDrop2.overlapsWithAnotherDrop(shapeDrop1)).isEqualTo(expectOverlap);
     }
 
     @ParameterizedTest

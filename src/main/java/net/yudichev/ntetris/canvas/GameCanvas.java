@@ -6,4 +6,6 @@ public interface GameCanvas {
     void renderRubble(double x, double y);
 
     void renderBlock(double x, double y, Player player);
+
+    void renderGameOver();
 }

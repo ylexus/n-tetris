@@ -11,7 +11,7 @@ final class RectangularPattern {
     private final int width;
 
     /**
-     * @param rows pattern rows, bottom row first
+     * @param rows pattern rows, top row first
      */
     private RectangularPattern(List<Row> rows) {
         checkArgument(!rows.isEmpty());
@@ -22,9 +22,6 @@ final class RectangularPattern {
                 })
                 .get()
                 .width();
-        // We have to create a copy here as we must ensure that the contract enforced above (uniform row widths) always holds,
-        // otherwise width() method will make no sense.
-        // Note that this does not create a copy if source is already immutable.
         this.rows = ImmutableList.copyOf(rows);
     }
 

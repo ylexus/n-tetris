@@ -48,6 +48,12 @@ public final class JavaFxGameCanvas implements GameCanvas {
         gc.fillRect(toPixelsX(x - blockWidth / 2), toPixelsY(y - blockHeight / 2), blockWidthPixels, blockHeightPixels);
     }
 
+    @Override
+    public void renderGameOver() {
+        gc.setFill(Color.BLACK);
+        gc.fillText("Game Over", toPixelsX(0.5), toPixelsY(0.5));
+    }
+
     private double toPixelsX(double x) {
         return x * canvasWidthPixels;
     }

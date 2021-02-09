@@ -20,6 +20,7 @@ import static java.util.concurrent.TimeUnit.NANOSECONDS;
 
 public final class Main extends Application {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Main.class);
+    private AnimationTimer animationTimer;
 
     public static void main(String[] args) {
         launch();
@@ -28,8 +29,8 @@ public final class Main extends Application {
     @Override
     public void start(Stage primaryStage) {
         var settings = Settings.builder()
-                .setPlayerZoneHeightInBlocks(30)
-                .setPlayerZoneWidthInBlocks(30)
+                .setPlayerZoneHeightInBlocks(20)
+                .setPlayerZoneWidthInBlocks(10)
                 .build();
 
         Pane root = new Pane();
@@ -57,26 +58,25 @@ public final class Main extends Application {
         primaryStage.widthProperty().addListener(sizeChangeListener);
         primaryStage.heightProperty().addListener(sizeChangeListener);
         Game game = new NTetris(settings);
-        var fps = 60;
-        double gamePeriodMillis = (double) 1_000 / fps;
-        new AnimationTimer() {
-            long frameNumber = 0;
+        animationTimer = new AnimationTimer() {
             long startNanoTime = Long.MIN_VALUE;
 
             public void handle(long currentNanoTime) {
+                loop(currentNanoTime);
+            }
+
+            private void loop(long currentNanoTime) {
+                logger.debug("animation timer");
                 if (startNanoTime == Long.MIN_VALUE) {
                     startNanoTime = currentNanoTime;
                 }
-                double gameTimeMillis = NANOSECONDS.toMillis(currentNanoTime - startNanoTime);
-                var localFrameNumber = Math.round(gameTimeMillis / gamePeriodMillis);
-                if (localFrameNumber > frameNumber) {
-                    frameNumber = localFrameNumber;
-                    gc.clearRect(0, 0, canvas.getWidth(), canvas.getHeight());
-                    game.render(gameTimeMillis, frameNumber, gameCanvas, keyEventQueueUnmodifiable);
-                    keyEventQueue.clear();
-                }
+                long gameTimeMillis = NANOSECONDS.toMillis(currentNanoTime - startNanoTime);
+                gc.clearRect(0, 0, canvas.getWidth(), canvas.getHeight());
+                game.render(gameTimeMillis, gameCanvas, keyEventQueueUnmodifiable);
+                keyEventQueue.clear();
             }
-        }.start();
+        };
+        animationTimer.start();
 
         primaryStage.show();
     }

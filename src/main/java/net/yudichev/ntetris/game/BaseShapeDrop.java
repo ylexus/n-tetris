@@ -26,7 +26,7 @@ class BaseShapeDrop {
         return ((ShapeDrop) this).withHorizontalOffset(horizontalOffset() + horizontalSpeed());
     }
 
-    public final boolean overlapsWithRubble(ShapeDrop anotherDrop) {
+    public final boolean overlapsWithAnotherDrop(ShapeDrop anotherDrop) {
         // more likely to overlap in the direction of our movement
         var rows = shape().getRows();
         if (horizontalSpeed() > 0) {
@@ -76,6 +76,10 @@ class BaseShapeDrop {
             var relevantAbsoluteSubRow = row.subRow(verticalOffset(), shape().width());
             relevantAbsoluteSubRow.impose(shape().getRows().get(i));
         }
+    }
+
+    public final boolean touchingEdge(int sceneWidth) {
+        return horizontalOffset() == 0 || horizontalOffset() + shape().height() == sceneWidth;
     }
 
     private boolean rowOverlaps(ShapeDrop anotherDrop, int rowIdx) {

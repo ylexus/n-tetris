@@ -6,5 +6,5 @@ import net.yudichev.ntetris.canvas.GameCanvas;
 import java.util.List;
 
 public interface Game {
-    void render(double gameTimeMillis, long frameNumber, GameCanvas canvas, List<KeyEvent> keyEventQueue);
+    void render(long gameTimeMillis, GameCanvas canvas, List<KeyEvent> keyEventQueue);
 }

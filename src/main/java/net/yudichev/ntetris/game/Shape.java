@@ -23,8 +23,14 @@ enum Shape {
             row(X, X, X),
             row(O, X, O)
     )),
-    I(pattern(
+    DASH(pattern(
             row(X, X, X, X)
+    )),
+    I(pattern(
+            row(X),
+            row(X),
+            row(X),
+            row(X)
     )),
     L(pattern(
             row(X, O),
