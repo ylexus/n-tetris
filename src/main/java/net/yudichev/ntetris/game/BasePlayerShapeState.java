@@ -8,9 +8,9 @@ import java.util.Optional;
 
 @Immutable
 @PublicImmutablesStyle
-interface BasePlayerShapeDropState {
+interface BasePlayerShapeState {
     @Value.Parameter
-    ShapeDrop currentDrop();
+    Shape currentShape();
 
-    Optional<ShapeDrop> nextDrop();
+    Optional<Shape> nextShape();
 }

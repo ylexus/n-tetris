@@ -33,6 +33,7 @@ final class Row {
         return new Row(elements, 0, elements.length);
     }
 
+    @SuppressWarnings("AssignmentOrReturnOfFieldWithMutableType")
     public boolean[] getElements() {
         return elements;
     }
@@ -42,7 +43,7 @@ final class Row {
     }
 
     public boolean overlapsWith(Row anotherRow) {
-        for (int i = 0; i < Math.min(width(), anotherRow.width()); i++) {
+        for (var i = 0; i < Math.min(width(), anotherRow.width()); i++) {
             if (elementAt(i) && anotherRow.elementAt(i)) {
                 return true;
             }
@@ -51,15 +52,15 @@ final class Row {
     }
 
     public void impose(Row anotherRow) {
-        for (int i = 0; i < anotherRow.width(); i++) {
+        for (var i = 0; i < anotherRow.width(); i++) {
             checkArgument(!(elementAt(i) && anotherRow.elementAt(i)), "cannot impose: elements would overlap");
             elements[i + startIndexInclusive] |= anotherRow.elementAt(i);
         }
     }
 
     public boolean isFull() {
-        for (int i = startIndexInclusive; i < endIndexExclusive; i++) {
-            boolean element = elements[i];
+        for (var i = startIndexInclusive; i < endIndexExclusive; i++) {
+            var element = elements[i];
             if (!element) {
                 return false;
             }
@@ -80,6 +81,26 @@ final class Row {
 
     public boolean elementAt(int offset) {
         return elements[offset + startIndexInclusive];
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null || getClass() != obj.getClass()) {
+            return false;
+        }
+        var other = (Row) obj;
+        return startIndexInclusive == other.startIndexInclusive && endIndexExclusive == other.endIndexExclusive && Arrays.equals(elements, other.elements);
+    }
+
+    @Override
+    public int hashCode() {
+        var result = Arrays.hashCode(elements);
+        result = 31 * result + startIndexInclusive;
+        result = 31 * result + endIndexExclusive;
+        return result;
     }
 
     @Override

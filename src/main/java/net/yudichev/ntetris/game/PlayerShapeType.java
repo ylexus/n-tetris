@@ -6,7 +6,7 @@ import static net.yudichev.ntetris.game.Row.row;
 import static net.yudichev.ntetris.game.ShapeConstants.O;
 import static net.yudichev.ntetris.game.ShapeConstants.X;
 
-enum Shape {
+enum PlayerShapeType {
     Q(pattern(
             row(X, X),
             row(X, X)
@@ -46,7 +46,7 @@ enum Shape {
 
     private final RectangularPattern thePattern;
 
-    Shape(RectangularPattern thePattern) {
+    PlayerShapeType(RectangularPattern thePattern) {
         this.thePattern = checkNotNull(thePattern);
     }
 

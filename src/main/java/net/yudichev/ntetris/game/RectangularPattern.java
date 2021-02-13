@@ -7,6 +7,7 @@ import java.util.List;
 import static com.google.common.base.Preconditions.checkArgument;
 
 final class RectangularPattern {
+    private static final RectangularPattern SINGLE_BLOCK = pattern(Row.row(true));
     private final List<Row> rows;
     private final int width;
 
@@ -33,6 +34,10 @@ final class RectangularPattern {
         return new RectangularPattern(ImmutableList.copyOf(rows));
     }
 
+    public static RectangularPattern singleBlock() {
+        return SINGLE_BLOCK;
+    }
+
     public int width() {
         return width;
     }
@@ -52,5 +57,21 @@ final class RectangularPattern {
     @Override
     public String toString() {
         return rows.toString();
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null || getClass() != obj.getClass()) {
+            return false;
+        }
+        return rows.equals(((RectangularPattern) obj).rows);
+    }
+
+    @Override
+    public int hashCode() {
+        return rows.hashCode();
     }
 }

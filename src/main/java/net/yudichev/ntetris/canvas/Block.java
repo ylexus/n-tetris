@@ -1,17 +1,24 @@
 package net.yudichev.ntetris.canvas;
 
-import net.yudichev.ntetris.game.Player;
+import javafx.scene.paint.Color;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-public abstract class Block {
-    private final Player owner;
+public class Block {
+    private final Color color;
+    private final String name;
 
-    protected Block(Player owner) {
-        this.owner = checkNotNull(owner);
+    public Block(Color color, String name) {
+        this.color = checkNotNull(color);
+        this.name = checkNotNull(name);
     }
 
-    public Player getOwner() {
-        return owner;
+    public Color getColor() {
+        return color;
+    }
+
+    @Override
+    public String toString() {
+        return name;
     }
 }

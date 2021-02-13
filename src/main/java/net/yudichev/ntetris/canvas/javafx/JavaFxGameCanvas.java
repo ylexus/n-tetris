@@ -3,12 +3,13 @@ package net.yudichev.ntetris.canvas.javafx;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.paint.Color;
 import net.yudichev.ntetris.Settings;
+import net.yudichev.ntetris.canvas.Block;
 import net.yudichev.ntetris.canvas.GameCanvas;
-import net.yudichev.ntetris.game.Player;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import static javafx.scene.text.TextAlignment.CENTER;
 
 public final class JavaFxGameCanvas implements GameCanvas {
     private static final Logger logger = LoggerFactory.getLogger(JavaFxGameCanvas.class);
@@ -24,8 +25,8 @@ public final class JavaFxGameCanvas implements GameCanvas {
     public JavaFxGameCanvas(GraphicsContext gc, Settings settings) {
         this.gc = checkNotNull(gc);
 
-        blockWidth = 1d / (settings.playerZoneWidthInBlocks() * 2);
-        blockHeight = 1d / settings.playerZoneHeightInBlocks();
+        blockWidth = 1.0d / (settings.playerZoneWidthInBlocks() * 2);
+        blockHeight = 1.0d / settings.playerZoneHeightInBlocks();
     }
 
     public void setSize(double canvasWidthPixels, double canvasHeightPixels) {
@@ -37,20 +38,15 @@ public final class JavaFxGameCanvas implements GameCanvas {
     }
 
     @Override
-    public void renderRubble(double x, double y) {
-        gc.setFill(Color.BLUE);
-        gc.fillRect(toPixelsX(x - blockWidth / 2), toPixelsY(y - blockHeight / 2), blockWidthPixels, blockHeightPixels);
-    }
-
-    @Override
-    public void renderBlock(double x, double y, Player player) {
-        gc.setFill(player == Player.LEFT ? Color.GREEN : Color.RED);
+    public void renderBlock(double x, double y, Block block) {
+        gc.setFill(block.getColor());
         gc.fillRect(toPixelsX(x - blockWidth / 2), toPixelsY(y - blockHeight / 2), blockWidthPixels, blockHeightPixels);
     }
 
     @Override
     public void renderGameOver() {
         gc.setFill(Color.BLACK);
+        gc.setTextAlign(CENTER);
         gc.fillText("Game Over", toPixelsX(0.5), toPixelsY(0.5));
     }
 
