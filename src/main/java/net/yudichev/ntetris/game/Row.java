@@ -33,7 +33,7 @@ final class Row {
         return new Row(elements, 0, elements.length);
     }
 
-    @SuppressWarnings("AssignmentOrReturnOfFieldWithMutableType")
+    @SuppressWarnings("AssignmentOrReturnOfFieldWithMutableType") // mutable for GC/perf reasons
     public boolean[] getElements() {
         return elements;
     }

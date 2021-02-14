@@ -11,6 +11,8 @@ import java.util.function.IntPredicate;
 import java.util.function.IntUnaryOperator;
 
 import static com.google.common.base.Preconditions.*;
+import static java.lang.Math.max;
+import static java.lang.Math.min;
 
 final class Scene {
     private static final Logger logger = LoggerFactory.getLogger(Scene.class);
@@ -42,14 +44,14 @@ final class Scene {
         unmodifiableRubble = Collections.unmodifiableList(rubble);
     }
 
-    public void addRubbleColumnInTheMiddle(int holeIndex) {
+    public void addRubbleColumnWithHole(int colIdx, int holeIndex) {
         for (var rowIdx = 0; rowIdx < height; rowIdx++) {
             if (rowIdx != holeIndex) {
                 var shape = Shape.of(RectangularPattern.singleBlock(),
-                        width / 2,
+                        colIdx,
                         rowIdx,
                         0);
-                rubble.get(width / 2).set(rowIdx, shape);
+                rubble.get(colIdx).set(rowIdx, shape);
                 onRubbleAdded.accept(shape);
             }
         }
@@ -146,41 +148,62 @@ final class Scene {
         return (blocksRelativeToTop + 0.5) / height;
     }
 
-    public Shape moveRubble(Shape shape) {
-        if (shape.horizontalSpeed() == 0) {
-            return shape;
+    public void moveRubble(Shape shape) {
+        var newShape = shape;
+        if (shape.horizontalSpeed() != 0) {
+            var candidateColIdx = shape.horizontalOffset() + shape.horizontalSpeed();
+            if (shape.invisibleWallHorizontalOffset() == candidateColIdx) {
+                // overlaps with invisible wall
+                // do not move, just stop it
+                newShape = stoppedRubble(shape);
+            } else {
+                var overlappingRubble = rubble.get(candidateColIdx).get(shape.verticalOffset());
+                if (overlappingRubble != null) {
+                    if (!movingInSameDirection(shape, overlappingRubble)) {
+                        newShape = stoppedRubble(shape);
+                    }
+                } else {
+                    var overlappingPlayerShape = playerShapeWithElementAt(candidateColIdx, shape.verticalOffset(), shape.horizontalSpeed());
+                    if (overlappingPlayerShape != null) {
+                        if (!movingInSameDirection(shape, overlappingPlayerShape)) {
+                            newShape = stoppedRubble(shape);
+                        }
+                    } else {
+                        // move the shape
+                        newShape = shape.withHorizontalOffset(candidateColIdx);
+                    }
+                }
+            }
         }
-
-        var candidateColIdx = shape.horizontalOffset() + shape.horizontalSpeed();
-        if (
-            // overlaps with invisible wall
-                shape.invisibleWallHorizontalOffset() == candidateColIdx
-                        // overlaps with rubble
-                        || rubble.get(candidateColIdx).get(shape.verticalOffset()) != null
-                        // overlaps with a player
-                        || anyPLayerShapeHasBlockAt(candidateColIdx, shape.verticalOffset())) {
-            // do not move, just stop it
-            return Shape.builder()
-                    .from(shape)
-                    .setHorizontalSpeed(0)
-                    .setInvisibleWallHorizontalOffset(-1)
-                    .build();
-        } else {
-            // move the shape
-            var newShape = shape.withHorizontalOffset(candidateColIdx);
+        if (newShape != shape) {
             checkState(rubble.get(shape.horizontalOffset()).set(shape.verticalOffset(), null) == shape);
             checkState(rubble.get(newShape.horizontalOffset()).set(newShape.verticalOffset(), newShape) == null);
-            return newShape;
+            onRubbleAmended.accept(shape, newShape);
         }
     }
 
-    private boolean anyPLayerShapeHasBlockAt(int horizontalOffset, int verticalOffset) {
+    private static Shape stoppedRubble(Shape shape) {
+        return Shape.builder()
+                .from(shape)
+                .setHorizontalSpeed(0)
+                .setInvisibleWallHorizontalOffset(-1)
+                .build();
+    }
+
+    @SuppressWarnings("BooleanMethodIsAlwaysInverted") // easier to read this way
+    private static boolean movingInSameDirection(Shape shape1, Shape shape2) {
+        return Integer.signum(shape1.horizontalSpeed()) == Integer.signum(shape2.horizontalSpeed());
+    }
+
+    @Nullable
+    private Shape playerShapeWithElementAt(int horizontalOffset, int verticalOffset, int friendlySpeed) {
+        checkArgument(friendlySpeed != 0);
         for (var playerShape : playerShapesByPlayer.values()) {
             if (playerShape.hasElementAtAbsoluteCoordinates(verticalOffset, horizontalOffset)) {
-                return true;
+                return playerShape;
             }
         }
-        return false;
+        return null;
     }
 
     private boolean overlapsWithRubble(Shape shape) {
@@ -201,11 +224,13 @@ final class Scene {
         var movedShape = shape.move();
         // are we touching another shape in the direction of our movement?
         for (var anotherPlayer : Player.ALL_PLAYERS) {
-            var anotherShape = playerShapesByPlayer.get(anotherPlayer);
-            if (anotherShape != null && anotherShape != shape) {
-                if (movedShape.overlapsWith(anotherShape)) {
-                    convertToRubble(player, "collapsed with another player when lowering");
-                    convertToRubble(anotherPlayer, "collapsed with another player that was lowering");
+            if (anotherPlayer != player) {
+                var anotherShape = playerShapesByPlayer.get(anotherPlayer);
+                if (anotherShape != null) {
+                    if (movedShape.overlapsWith(anotherShape)) {
+                        convertToRubble(player, "collapsed with another player when lowering");
+                        convertToRubble(anotherPlayer, "collapsed with another player that was lowering");
+                    }
                 }
             }
         }
@@ -219,7 +244,7 @@ final class Scene {
 
         // if we are still not rubble, check if we reached the edge
         if (playerShapesByPlayer.containsKey(player)) {
-            if (movedShape.touchingEdge(width)) {
+            if (movedShape.touchingVerticalEdge(width)) {
                 playerShapesByPlayer.remove(player);
                 return ShapeLoweringResult.REACHED_BOTTOM;
             }
@@ -243,26 +268,29 @@ final class Scene {
 
     private void maybeCollapseRubble(Player player, int startingColIdx, int width) {
         int startColIdx;
-        IntPredicate loopCondition;
+        IntPredicate collapseRangeCondition;
+        IntPredicate movingRangeCondition;
         IntUnaryOperator loopStep;
         int rubbleDropSpeed;
         switch (player) {
             case LEFT -> {
                 startColIdx = startingColIdx + width - 1;
-                loopCondition = colIdx -> colIdx >= startingColIdx;
+                collapseRangeCondition = colIdx -> colIdx >= startingColIdx;
+                movingRangeCondition = colIdx -> colIdx >= 0;
                 loopStep = colIdx -> colIdx - 1;
                 rubbleDropSpeed = 1;
             }
             case RIGHT -> {
                 startColIdx = startingColIdx;
-                loopCondition = colIdx -> colIdx < startingColIdx + width;
+                collapseRangeCondition = colIdx -> colIdx < startingColIdx + width;
+                movingRangeCondition = colIdx -> colIdx < this.width;
                 loopStep = colIdx -> colIdx + 1;
                 rubbleDropSpeed = -1;
             }
             default -> throw new IllegalStateException("invalid player " + player);
         }
         var firstCollapsedColIdx = -1;
-        for (var colIdx = startColIdx; loopCondition.test(colIdx); colIdx = loopStep.applyAsInt(colIdx)) {
+        for (var colIdx = startColIdx; collapseRangeCondition.test(colIdx); colIdx = loopStep.applyAsInt(colIdx)) {
             var candidateRow = rubble.get(colIdx);
             var rowFull = true;
             for (var rowIdx = 0; rowIdx < candidateRow.size(); rowIdx++) {
@@ -273,29 +301,60 @@ final class Scene {
             }
             if (rowFull) {
                 logger.debug("Collapsed rubble column {}", colIdx);
-                firstCollapsedColIdx = colIdx;
+                if (firstCollapsedColIdx < 0) {
+                    firstCollapsedColIdx = colIdx;
+                }
                 for (var rowIdx = 0; rowIdx < candidateRow.size(); rowIdx++) {
                     onRubbleRemoved.accept(candidateRow.set(rowIdx, null));
                 }
             }
         }
         if (firstCollapsedColIdx >= 0) {
-            for (var colIdx = firstCollapsedColIdx; loopCondition.test(colIdx); colIdx = loopStep.applyAsInt(colIdx)) {
-                var candidateRow = rubble.get(colIdx);
-                for (var rowIdx = 0; rowIdx < candidateRow.size(); rowIdx++) {
-                    var shape = candidateRow.get(rowIdx);
+            for (var colIdx = loopStep.applyAsInt(firstCollapsedColIdx); movingRangeCondition.test(colIdx); colIdx = loopStep.applyAsInt(colIdx)) {
+                var candidateColumn = rubble.get(colIdx);
+                for (var rowIdx = 0; rowIdx < candidateColumn.size(); rowIdx++) {
+                    var shape = candidateColumn.get(rowIdx);
                     if (shape != null) {
                         var newShape = Shape.builder().from(shape)
                                 .setHorizontalSpeed(rubbleDropSpeed)
                                 // drop no deeper than the first collapsed row
-                                .setInvisibleWallHorizontalOffset(Math.max(0, Math.min(firstCollapsedColIdx + rubbleDropSpeed, this.width - 1)))
+                                .setInvisibleWallHorizontalOffset(max(0, min(firstCollapsedColIdx + rubbleDropSpeed, this.width - 1)))
                                 .build();
-                        candidateRow.set(rowIdx, newShape);
+                        candidateColumn.set(rowIdx, newShape);
                         onRubbleAmended.accept(shape, newShape);
                     }
                 }
             }
         }
+    }
+
+    public void rotatePlayersShape(Player player) {
+        var shape = playerShapesByPlayer.get(player);
+        if (shape != null) {
+            var candidateShape = shape.rotate();
+            if (!crossesSceneBoundary(candidateShape) && !overlapsWithAnotherPlayersShape(candidateShape, player) && !overlapsWithRubble(candidateShape)) {
+                playerShapesByPlayer.put(player, candidateShape);
+            }
+        }
+    }
+
+    private boolean overlapsWithAnotherPlayersShape(Shape candidateShape, Player player) {
+        for (var anotherPlayer : Player.ALL_PLAYERS) {
+            if (anotherPlayer != player) {
+                var anotherShape = playerShapesByPlayer.get(anotherPlayer);
+                if (anotherShape != null) {
+                    if (candidateShape.overlapsWith(anotherShape)) {
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
+    private boolean crossesSceneBoundary(Shape candidateShape) {
+        return candidateShape.horizontalOffset() < 0 || candidateShape.horizontalOffset() + candidateShape.pattern().height() > width
+                || candidateShape.verticalOffset() < 0 || candidateShape.verticalOffset() + candidateShape.pattern().width() > height;
     }
 
     public enum ShapeLoweringResult {

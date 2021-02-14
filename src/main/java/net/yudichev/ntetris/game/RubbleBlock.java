@@ -12,7 +12,7 @@ final class RubbleBlock extends GameShape {
     private Shape shape;
 
     RubbleBlock(Scene scene, GameCanvas canvas, Shape shape) {
-        super(scene, canvas, new Block(Color.BLUE, "rubble"));
+        super(scene, canvas, Block.of(Color.BLUE, "rubble").withShape(shape));
         this.shape = checkNotNull(shape);
     }
 
@@ -23,7 +23,6 @@ final class RubbleBlock extends GameShape {
 
     public void transitionTo(Shape newShape) {
         logger.debug("rubble {}: transition to {}", shape, newShape);
-        sourceShapeWhenTransitioning = shape;
         shape = newShape;
     }
 
@@ -35,7 +34,7 @@ final class RubbleBlock extends GameShape {
             sourceShapeWhenTransitioning = shape;
             do {
                 logger.debug("{}: rubble {}: outstanding steps {}", gameTimeMillis, shape, outstandingDropSteps);
-                shape = scene.moveRubble(shape);
+                scene.moveRubble(shape);
             } while (--outstandingDropSteps > 0);
             timeSinceLastMove = 0;
         } else {

@@ -3,19 +3,27 @@ Configuration:
   appenders:
     Console:
       name: STDOUT
+      ThresholdFilter:
+        level: INFO
       PatternLayout:
         Pattern: "%d{ISO8601}{GMT} %p [%t] %C{1.} %m%n"
+    RollingFile:
+      name: FILE
+      fileName: build/app.log
+      filePattern: build/app.log.%d{yyyy-MM-dd}-%i.gz
+      PatternLayout:
+        Pattern: "%d{ISO8601}{GMT} %p [%t] %C{1.} %m%n"
+      Policies:
+        SizeBasedTriggeringPolicy:
+          size: 50Mb
+        OnStartupTriggeringPolicy: { }
+      DefaultRollOverStrategy:
+        max: 2
 
   Loggers:
-    logger:
-      - name: net.yudichev.jiotty.connector.google.photos
-        level: debug
-        includeLocation: true
-      - name: net.yudichev.googlephotosupload
-        level: debug
-        includeLocation: true
     Root:
       level: debug
       includeLocation: true
       AppenderRef:
         - ref: STDOUT
+        - ref: FILE

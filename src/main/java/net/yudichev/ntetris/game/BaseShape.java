@@ -4,6 +4,8 @@ import net.yudichev.ntetris.PublicImmutablesStyle;
 import org.immutables.value.Value;
 import org.immutables.value.Value.Immutable;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.function.Consumer;
 
 @SuppressWarnings("ClassReferencesSubclass")
@@ -75,8 +77,32 @@ abstract class BaseShape {
         }
     }
 
-    public final boolean touchingEdge(int sceneWidth) {
+    public final boolean touchingVerticalEdge(int sceneWidth) {
         return horizontalOffset() == 0 || horizontalOffset() + pattern().height() == sceneWidth;
+    }
+
+    public final Shape rotate() {
+        var newWidth = pattern().height();
+        var newHeight = pattern().width();
+        List<Row> newRows = new ArrayList<>(pattern().width());
+        for (var newRowIdx = 0; newRowIdx < pattern().width(); newRowIdx++) {
+            newRows.add(Row.emptyRow(pattern().height()));
+        }
+        var oldRows = pattern().getRows();
+        for (var newColIdx = 0; newColIdx < oldRows.size(); newColIdx++) {
+            var oldRow = oldRows.get(newColIdx);
+            for (var newRowIdx = 0; newRowIdx < pattern().width(); newRowIdx++) {
+                newRows.get(newRowIdx).getElements()[oldRows.size() - newColIdx - 1] = oldRow.getElements()[newRowIdx];
+            }
+        }
+
+        var newHorizontalOffset = horizontalOffset() + (pattern().height() - newHeight) / 2;
+        var newVerticalOffset = verticalOffset() + (pattern().width() - newWidth) / 2;
+        var result = Shape.of(RectangularPattern.pattern(newRows), newHorizontalOffset, newVerticalOffset, horizontalSpeed());
+        if (invisibleWallHorizontalOffset() >= 0) {
+            result = result.withInvisibleWallHorizontalOffset(invisibleWallHorizontalOffset());
+        }
+        return result;
     }
 
     private boolean rowOverlaps(Shape anotherShape, int rowIdx) {

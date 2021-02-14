@@ -15,12 +15,13 @@ abstract class GameShape {
 
     protected final Scene scene;
     protected final GameCanvas canvas;
-    protected final Block block;
     protected long lastMoveTime = -1;
     protected long timeSinceLastMove = -1;
     protected long gameTimeMillis = -1;
     @Nullable
     protected Shape sourceShapeWhenTransitioning;
+
+    private Block block;
 
     protected GameShape(Scene scene, GameCanvas canvas, Block block) {
         this.scene = checkNotNull(scene);
@@ -39,6 +40,7 @@ abstract class GameShape {
     public abstract void render();
 
     protected void renderShape(Shape destinationShape) {
+        block = block.withShape(destinationShape);
         var transitionProportion = (double) timeSinceLastMove / DROP_TRANSITION_STEP_DURATION;
         logger.debug("render {} src {} dest {}, proportion {}", block, sourceShapeWhenTransitioning, destinationShape, transitionProportion);
         for (var rowIdx = 0; rowIdx < destinationShape.pattern().getRows().size(); rowIdx++) {

@@ -24,7 +24,7 @@ final class PlayerShape extends GameShape {
     private boolean gameOver;
 
     PlayerShape(Player player, Scene scene, GameCanvas canvas) {
-        super(scene, canvas, new Block(player == Player.LEFT ? Color.RED : Color.GREEN, player.name()));
+        super(scene, canvas, Block.of(player == Player.LEFT ? Color.RED : Color.GREEN, player.name()));
         this.player = checkNotNull(player);
     }
 

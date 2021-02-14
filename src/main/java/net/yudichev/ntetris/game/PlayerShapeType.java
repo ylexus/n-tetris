@@ -23,6 +23,11 @@ enum PlayerShapeType {
             row(X, X, X),
             row(O, X, O)
     )),
+    PLUS(pattern(
+            row(O, X, O),
+            row(X, X, X),
+            row(O, X, O)
+    )),
     DASH(pattern(
             row(X, X, X, X)
     )),

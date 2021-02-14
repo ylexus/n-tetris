@@ -24,7 +24,7 @@ public final class Main extends Application {
     @Override
     public void start(Stage primaryStage) {
         var settings = Settings.builder()
-                .setPlayerZoneHeightInBlocks(10)
+                .setPlayerZoneHeightInBlocks(14)
                 .setPlayerZoneWidthInBlocks(30)
                 .build();
 
@@ -32,8 +32,8 @@ public final class Main extends Application {
         var theScene = new Scene(root);
         primaryStage.setScene(theScene);
 
-        var canvasWidth = 20 * settings.playerZoneWidthInBlocks() * 2 + 1;
-        var canvasHeight = 20 * settings.playerZoneHeightInBlocks();
+        var canvasWidth = 25 * settings.playerZoneWidthInBlocks() * 2 + 1;
+        var canvasHeight = 25 * settings.playerZoneHeightInBlocks();
         root.setPrefWidth(canvasWidth);
         root.setPrefHeight(canvasHeight);
         var canvas = new Canvas();
@@ -50,7 +50,7 @@ public final class Main extends Application {
         primaryStage.heightProperty().addListener(sizeChangeListener);
         var keyPressTracker = new KeyPressTracker(theScene);
         Game game = new NTetris(settings, gameCanvas, keyPressTracker);
-        var animationTimer = new AnimationTimer() {
+        new AnimationTimer() {
             long startNanoTime = Long.MIN_VALUE;
 
             @Override
@@ -67,9 +67,7 @@ public final class Main extends Application {
                 gc.clearRect(0, 0, canvas.getWidth(), canvas.getHeight());
                 game.render(gameTimeMillis);
             }
-        };
-        animationTimer.start();
-
+        }.start();
         primaryStage.show();
     }
 }

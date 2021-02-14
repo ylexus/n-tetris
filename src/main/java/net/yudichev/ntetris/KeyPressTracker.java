@@ -15,7 +15,7 @@ final class KeyPressTracker implements KeyState {
 
     private final Set<KeyCode> pressedKeys = EnumSet.noneOf(KeyCode.class);
     // TODO abstract these out and name them as drop/rotate keys
-    private final Set<KeyCode> unrepeatableKeyCodes = EnumSet.of(KeyCode.K, KeyCode.D, KeyCode.A, KeyCode.SEMICOLON);
+    private final Set<KeyCode> unrepeatableKeyCodes = EnumSet.of(KeyCode.K, KeyCode.D, KeyCode.A, KeyCode.SEMICOLON, KeyCode.BACK_SPACE);
     private final List<KeyCode> queue = new ArrayList<>(64);
     private final Map<KeyCode, Long> timeKeyLastProcessedByKeyCode = new EnumMap<>(KeyCode.class);
 
