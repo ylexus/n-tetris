@@ -6,6 +6,7 @@ import org.immutables.value.Value.Immutable;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.function.Consumer;
 
 @SuppressWarnings("ClassReferencesSubclass")
@@ -27,6 +28,17 @@ abstract class BaseShape {
     @Value.Default
     public int invisibleWallHorizontalOffset() {
         return -1;
+    }
+
+    public abstract Optional<Player> fallCausedBy();
+
+    public Shape stopFalling() {
+        return Shape.builder()
+                .from(this)
+                .setHorizontalSpeed(0)
+                .setInvisibleWallHorizontalOffset(-1)
+                .setFallCausedBy(Optional.empty())
+                .build();
     }
 
     public final Shape move() {

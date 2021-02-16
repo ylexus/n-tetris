@@ -29,7 +29,7 @@ final class PlayerShape extends GameShape {
     }
 
     public boolean lower() {
-        var outstandingDropSteps = timeSinceLastMove / DROP_STEP_DURATION;
+        var outstandingDropSteps = timeSinceLastMove / DROP_STEP_DURATION_PLAYER;
         logger.debug("{}: {}:  timeSinceLastMove {}", gameTimeMillis, player, timeSinceLastMove);
         if (outstandingDropSteps > 0) {
             lastMoveTime = gameTimeMillis;

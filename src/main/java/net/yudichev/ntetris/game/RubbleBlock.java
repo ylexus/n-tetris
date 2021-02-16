@@ -5,7 +5,7 @@ import net.yudichev.ntetris.canvas.Block;
 import net.yudichev.ntetris.canvas.GameCanvas;
 
 import static com.google.common.base.Preconditions.checkNotNull;
-import static net.yudichev.ntetris.game.GameConstants.DROP_STEP_DURATION;
+import static net.yudichev.ntetris.game.GameConstants.DROP_STEP_DURATION_RUBBLE;
 import static net.yudichev.ntetris.game.GameConstants.DROP_TRANSITION_STEP_DURATION;
 
 final class RubbleBlock extends GameShape {
@@ -27,7 +27,7 @@ final class RubbleBlock extends GameShape {
     }
 
     public void move() {
-        var outstandingDropSteps = timeSinceLastMove / DROP_STEP_DURATION;
+        var outstandingDropSteps = timeSinceLastMove / DROP_STEP_DURATION_RUBBLE;
         logger.debug("{}: rubble {}: timeSinceLastMove {}", gameTimeMillis, shape, timeSinceLastMove);
         if (outstandingDropSteps > 0) {
             lastMoveTime = gameTimeMillis;

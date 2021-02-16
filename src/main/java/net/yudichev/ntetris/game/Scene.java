@@ -13,6 +13,7 @@ import java.util.function.IntUnaryOperator;
 import static com.google.common.base.Preconditions.*;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
+import static java.util.Arrays.fill;
 
 final class Scene {
     private static final Logger logger = LoggerFactory.getLogger(Scene.class);
@@ -26,6 +27,7 @@ final class Scene {
     private final Map<Player, Shape> playerShapesByPlayer = new EnumMap<>(Player.class);
     private final List<List<Shape>> unmodifiableRubble;
     private final Map<Player, Shape> unmodifiablePlayerShapesByPLayer = Collections.unmodifiableMap(playerShapesByPlayer);
+    private final boolean[] collapsingRubbleClusterEndedRowIndexes;
 
     Scene(int width, int height, Consumer<Shape> onRubbleAdded, Consumer<Shape> onRubbleRemoved, BiConsumer<Shape, Shape> onRubbleAmended) {
         rubble = new ArrayList<>(width);
@@ -42,6 +44,7 @@ final class Scene {
             rubble.add(column);
         }
         unmodifiableRubble = Collections.unmodifiableList(rubble);
+        collapsingRubbleClusterEndedRowIndexes = new boolean[height];
     }
 
     public void addRubbleColumnWithHole(int colIdx, int holeIndex) {
@@ -155,18 +158,18 @@ final class Scene {
             if (shape.invisibleWallHorizontalOffset() == candidateColIdx) {
                 // overlaps with invisible wall
                 // do not move, just stop it
-                newShape = stoppedRubble(shape);
+                newShape = shape.stopFalling();
             } else {
                 var overlappingRubble = rubble.get(candidateColIdx).get(shape.verticalOffset());
                 if (overlappingRubble != null) {
                     if (!movingInSameDirection(shape, overlappingRubble)) {
-                        newShape = stoppedRubble(shape);
+                        newShape = shape.stopFalling();
                     }
                 } else {
                     var overlappingPlayerShape = playerShapeWithElementAt(candidateColIdx, shape.verticalOffset(), shape.horizontalSpeed());
                     if (overlappingPlayerShape != null) {
                         if (!movingInSameDirection(shape, overlappingPlayerShape)) {
-                            newShape = stoppedRubble(shape);
+                            newShape = shape.stopFalling();
                         }
                     } else {
                         // move the shape
@@ -179,15 +182,9 @@ final class Scene {
             checkState(rubble.get(shape.horizontalOffset()).set(shape.verticalOffset(), null) == shape);
             checkState(rubble.get(newShape.horizontalOffset()).set(newShape.verticalOffset(), newShape) == null);
             onRubbleAmended.accept(shape, newShape);
+            var newShapePosition = newShape.horizontalOffset();
+            newShape.fallCausedBy().ifPresent(player -> maybeCollapseRubble(player, newShapePosition, 1));
         }
-    }
-
-    private static Shape stoppedRubble(Shape shape) {
-        return Shape.builder()
-                .from(shape)
-                .setHorizontalSpeed(0)
-                .setInvisibleWallHorizontalOffset(-1)
-                .build();
     }
 
     @SuppressWarnings("BooleanMethodIsAlwaysInverted") // easier to read this way
@@ -271,6 +268,7 @@ final class Scene {
         IntPredicate collapseRangeCondition;
         IntPredicate movingRangeCondition;
         IntUnaryOperator loopStep;
+        IntBiPredicate furtherThanTest;
         int rubbleDropSpeed;
         switch (player) {
             case LEFT -> {
@@ -278,6 +276,7 @@ final class Scene {
                 collapseRangeCondition = colIdx -> colIdx >= startingColIdx;
                 movingRangeCondition = colIdx -> colIdx >= 0;
                 loopStep = colIdx -> colIdx - 1;
+                furtherThanTest = (first, second) -> first < second;
                 rubbleDropSpeed = 1;
             }
             case RIGHT -> {
@@ -285,11 +284,13 @@ final class Scene {
                 collapseRangeCondition = colIdx -> colIdx < startingColIdx + width;
                 movingRangeCondition = colIdx -> colIdx < this.width;
                 loopStep = colIdx -> colIdx + 1;
+                furtherThanTest = (first, second) -> first > second;
                 rubbleDropSpeed = -1;
             }
             default -> throw new IllegalStateException("invalid player " + player);
         }
         var firstCollapsedColIdx = -1;
+        var lastCollapsedColIdx = -1;
         for (var colIdx = startColIdx; collapseRangeCondition.test(colIdx); colIdx = loopStep.applyAsInt(colIdx)) {
             var candidateRow = rubble.get(colIdx);
             var rowFull = true;
@@ -304,24 +305,34 @@ final class Scene {
                 if (firstCollapsedColIdx < 0) {
                     firstCollapsedColIdx = colIdx;
                 }
+                lastCollapsedColIdx = colIdx;
                 for (var rowIdx = 0; rowIdx < candidateRow.size(); rowIdx++) {
                     onRubbleRemoved.accept(candidateRow.set(rowIdx, null));
                 }
             }
         }
+
+        fill(collapsingRubbleClusterEndedRowIndexes, false);
         if (firstCollapsedColIdx >= 0) {
             for (var colIdx = loopStep.applyAsInt(firstCollapsedColIdx); movingRangeCondition.test(colIdx); colIdx = loopStep.applyAsInt(colIdx)) {
                 var candidateColumn = rubble.get(colIdx);
                 for (var rowIdx = 0; rowIdx < candidateColumn.size(); rowIdx++) {
-                    var shape = candidateColumn.get(rowIdx);
-                    if (shape != null) {
-                        var newShape = Shape.builder().from(shape)
-                                .setHorizontalSpeed(rubbleDropSpeed)
-                                // drop no deeper than the first collapsed row
-                                .setInvisibleWallHorizontalOffset(max(0, min(firstCollapsedColIdx + rubbleDropSpeed, this.width - 1)))
-                                .build();
-                        candidateColumn.set(rowIdx, newShape);
-                        onRubbleAmended.accept(shape, newShape);
+                    var endOfCollapsingClusterOnThisRow = collapsingRubbleClusterEndedRowIndexes[rowIdx];
+                    if (!endOfCollapsingClusterOnThisRow) {
+                        var shape = candidateColumn.get(rowIdx);
+                        if (shape != null) {
+                            var newShape = Shape.builder().from(shape)
+                                    .setHorizontalSpeed(rubbleDropSpeed)
+                                    // drop no deeper than the first collapsed row
+                                    .setInvisibleWallHorizontalOffset(max(0, min(firstCollapsedColIdx + rubbleDropSpeed, this.width - 1)))
+                                    .setFallCausedBy(player)
+                                    .build();
+                            candidateColumn.set(rowIdx, newShape);
+                            onRubbleAmended.accept(shape, newShape);
+                        } else if (furtherThanTest.test(colIdx, lastCollapsedColIdx)) {
+                            // we are now beyond last collapsed column, and we encountered an empty space: this row is now finished
+                            collapsingRubbleClusterEndedRowIndexes[rowIdx] = true;
+                        }
                     }
                 }
             }
@@ -359,5 +370,10 @@ final class Scene {
 
     public enum ShapeLoweringResult {
         LOWERED, BECAME_RUBBLE, REACHED_BOTTOM
+    }
+
+    @FunctionalInterface
+    interface IntBiPredicate {
+        boolean test(int first, int second);
     }
 }
