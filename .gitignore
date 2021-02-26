@@ -1,4 +1,9 @@
 # Project exclude paths
 /.gradle/
-/build/
+*/build/
+ios/robovm-build/
+android/assets/build/
+android/libs/
+html/war/
 *.iml
+local.properties
