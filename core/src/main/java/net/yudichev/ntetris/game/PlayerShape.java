@@ -1,12 +1,13 @@
 package net.yudichev.ntetris.game;
 
-import com.badlogic.gdx.graphics.Color;
 import net.yudichev.ntetris.canvas.Block;
 import net.yudichev.ntetris.canvas.GameCanvas;
 
 import java.util.Random;
 import java.util.function.IntFunction;
 
+import static net.yudichev.ntetris.canvas.game.BlockLook.LEFT_PLAYER_NORMAL;
+import static net.yudichev.ntetris.canvas.game.BlockLook.RIGHT_PLAYER_NORMAL;
 import static net.yudichev.ntetris.game.GameConstants.*;
 import static net.yudichev.ntetris.game.Scene.ShapeLoweringResult;
 import static net.yudichev.ntetris.util.Preconditions.checkNotNull;
@@ -20,22 +21,23 @@ final class PlayerShape extends GameShape {
      * -1 means no deadline
      */
     private final Player player;
-    private long penaltyDeadline = -1;
+    private double penaltyDeadline = Double.MIN_VALUE;
     private boolean gameOver;
 
     PlayerShape(Player player, Scene scene, GameCanvas canvas) {
-        super(scene, canvas, Block.of(player == Player.LEFT ? Color.RED : Color.GREEN, player.name()));
+        super(scene, canvas, Block.of(player == Player.LEFT ? LEFT_PLAYER_NORMAL : RIGHT_PLAYER_NORMAL));
         this.player = checkNotNull(player);
     }
 
     public boolean lower() {
-        long outstandingDropSteps = timeSinceLastMove / DROP_STEP_DURATION_PLAYER;
-        logger.debug("{}: {}:  timeSinceLastMove {}", gameTimeMillis, player, timeSinceLastMove);
+        @SuppressWarnings("NumericCastThatLosesPrecision") // exactly what's intended - to get the floor
+        long outstandingDropSteps = (long) (timeSinceLastMove / DROP_STEP_DURATION_PLAYER);
+        logger.debug("{}: {}:  timeSinceLastMove {}", gameTime, player, timeSinceLastMove);
         if (outstandingDropSteps > 0) {
-            lastMoveTime = gameTimeMillis;
+            lastMoveTime = gameTime;
             sourceShapeWhenTransitioning = scene.getPlayerShapesByPlayer().get(player);
             do {
-                logger.debug("{}: {}: outstanding steps {}", gameTimeMillis, player, outstandingDropSteps);
+                logger.debug("{}: {}: outstanding steps {}", gameTime, player, outstandingDropSteps);
                 ShapeLoweringResult loweringResult = scene.lowerShape(player);
                 logger.debug("player lowering results {}", loweringResult);
                 if (loweringResult != null) {
@@ -90,13 +92,14 @@ final class PlayerShape extends GameShape {
         sourceShapeWhenTransitioning = null;
     }
 
+    @SuppressWarnings("FloatingPointEquality")
     private boolean shouldSpawnNewShape() {
-        logger.info("{}: player {} has no shape, deadline {}", gameTimeMillis, player, penaltyDeadline);
-        if (penaltyDeadline == -1) {
+        logger.info("{}: player {} has no shape, deadline {}", gameTime, player, penaltyDeadline);
+        if (penaltyDeadline == Double.MIN_VALUE) {
             return true;
         }
-        if (gameTimeMillis >= penaltyDeadline) {
-            penaltyDeadline = -1;
+        if (gameTime >= penaltyDeadline) {
+            penaltyDeadline = Double.MIN_VALUE;
             return true;
         }
         return false;
@@ -181,7 +184,7 @@ final class PlayerShape extends GameShape {
 
     private void processLoweringResult(ShapeLoweringResult shapeLoweringResult) {
         if (shapeLoweringResult == ShapeLoweringResult.REACHED_BOTTOM) {
-            penaltyDeadline = gameTimeMillis + PLAYER_PENALTY_PAUSE;
+            penaltyDeadline = gameTime + PLAYER_PENALTY_PAUSE;
             logger.info("Player {} reached bottom, penalty until {}", player, penaltyDeadline);
         }
     }

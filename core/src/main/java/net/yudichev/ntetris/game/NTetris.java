@@ -2,6 +2,7 @@ package net.yudichev.ntetris.game;
 
 import net.yudichev.ntetris.ControlState;
 import net.yudichev.ntetris.Game;
+import net.yudichev.ntetris.GameControl;
 import net.yudichev.ntetris.Settings;
 import net.yudichev.ntetris.canvas.GameCanvas;
 import org.slf4j.Logger;
@@ -29,8 +30,8 @@ public final class NTetris implements Game {
     private boolean gameOver;
 
     private boolean paused;
-    private long lastPausedTime = -1;
-    private long totalPausedTimeSpan;
+    private double lastPausedTime = Double.MIN_VALUE;
+    private double totalPausedTimeSpan;
 
     public NTetris(Settings settings, GameCanvas canvas, ControlState controlState) {
         this.canvas = checkNotNull(canvas);
@@ -55,8 +56,10 @@ public final class NTetris implements Game {
     }
 
     @Override
-    public void render(long gameTime) {
-        long gameTimeMillis = offsetGameTime(gameTime);
+    public void render(double gameTime) {
+        canvas.beginFrame();
+
+        double gameTimeMillis = offsetGameTime(gameTime);
 
         forEachPlayer(playerShape -> playerShape.onFrameStart(gameTimeMillis));
         rubbleBlocksByShape.values().forEach(rubbleBlock -> rubbleBlock.onFrameStart(gameTimeMillis));
@@ -90,20 +93,23 @@ public final class NTetris implements Game {
         if (gameOver) {
             canvas.renderText("Game Over");
         }
+
+        canvas.endFrame();
     }
 
-    private long offsetGameTime(long gameTimeMillis) {
+    @SuppressWarnings("FloatingPointEquality")
+    private double offsetGameTime(double gameTimeMillis) {
         if (paused) {
-            if (lastPausedTime == -1) {
+            if (lastPausedTime == Double.MIN_VALUE) {
                 lastPausedTime = gameTimeMillis;
                 logger.debug("Paused at {}", lastPausedTime);
             }
             gameTimeMillis = lastPausedTime;
         } else {
-            if (lastPausedTime > 0) {
+            if (lastPausedTime != Double.MIN_VALUE) {
                 totalPausedTimeSpan += gameTimeMillis - lastPausedTime;
                 logger.debug("Un-paused at {}, last paused at {}, total time on pause {}", gameTimeMillis, lastPausedTime, totalPausedTimeSpan);
-                lastPausedTime = -1;
+                lastPausedTime = Double.MIN_VALUE;
             }
         }
         logger.debug("Real time {}, total paused {}, game time {}", gameTimeMillis, totalPausedTimeSpan, gameTimeMillis - totalPausedTimeSpan);
@@ -133,36 +139,38 @@ public final class NTetris implements Game {
         }
     }
 
-    private void processKeys(long gameTimeMillis) {
+    private void processKeys(double gameTimeMillis) {
         controlState.forAllPressedKeys(gameTimeMillis, gameControl -> {
-            switch (gameControl) {
-                case LEFT_PLAYER_UP:
-                    scene.movePlayerShapeVertically(Player.LEFT, -1);
-                    break;
-                case LEFT_PLAYER_DOWN:
-                    scene.movePlayerShapeVertically(Player.LEFT, 1);
-                    break;
-                case RIGHT_PLAYER_UP:
-                    scene.movePlayerShapeVertically(Player.RIGHT, -1);
-                    break;
-                case RIGHT_PLAYER_DOWN:
-                    scene.movePlayerShapeVertically(Player.RIGHT, 1);
-                    break;
-                case LEFT_PLAYER_ROTATE:
-                    scene.rotatePlayersShape(Player.LEFT);
-                    break;
-                case RIGHT_PLAYER_ROTATE:
-                    scene.rotatePlayersShape(Player.RIGHT);
-                    break;
-                case LEFT_PLAYER_DROP:
-                    shapeByPlayer.get(Player.LEFT).dropShape();
-                    break;
-                case RIGHT_PLAYER_DROP:
-                    shapeByPlayer.get(Player.RIGHT).dropShape();
-                    break;
-                case PAUSE:
-                    paused = !paused;
-                    break;
+            if (gameControl == GameControl.PAUSE) {
+                paused = !paused;
+            }
+            if (!paused) {
+                switch (gameControl) {
+                    case LEFT_PLAYER_UP:
+                        scene.movePlayerShapeVertically(Player.LEFT, -1);
+                        break;
+                    case LEFT_PLAYER_DOWN:
+                        scene.movePlayerShapeVertically(Player.LEFT, 1);
+                        break;
+                    case RIGHT_PLAYER_UP:
+                        scene.movePlayerShapeVertically(Player.RIGHT, -1);
+                        break;
+                    case RIGHT_PLAYER_DOWN:
+                        scene.movePlayerShapeVertically(Player.RIGHT, 1);
+                        break;
+                    case LEFT_PLAYER_ROTATE:
+                        scene.rotatePlayersShape(Player.LEFT);
+                        break;
+                    case RIGHT_PLAYER_ROTATE:
+                        scene.rotatePlayersShape(Player.RIGHT);
+                        break;
+                    case LEFT_PLAYER_DROP:
+                        shapeByPlayer.get(Player.LEFT).dropShape();
+                        break;
+                    case RIGHT_PLAYER_DROP:
+                        shapeByPlayer.get(Player.RIGHT).dropShape();
+                        break;
+                }
             }
         });
     }

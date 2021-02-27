@@ -11,7 +11,7 @@ import org.slf4j.LoggerFactory;
 public class GdxGame extends ApplicationAdapter {
     private static final Logger logger = LoggerFactory.getLogger(GdxGame.class);
 
-    private float gameTimeMillis = Float.MIN_VALUE;
+    private double gameTimeMillis = Float.MIN_VALUE;
     private Game game;
     private GdxGameCanvas canvas;
 
@@ -28,7 +28,7 @@ public class GdxGame extends ApplicationAdapter {
 
     @Override
     public void render() {
-        float deltaTime = Gdx.graphics.getDeltaTime();
+        double deltaTime = Gdx.graphics.getDeltaTime();
         //noinspection FloatingPointEquality
         if (gameTimeMillis == Float.MIN_VALUE) {
             gameTimeMillis = 0;
@@ -38,7 +38,7 @@ public class GdxGame extends ApplicationAdapter {
         Gdx.gl.glClearColor(1, 1, 1, 1);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
-        game.render((long) gameTimeMillis);// TODO convert everything to float?
+        game.render(gameTimeMillis);
     }
 
     @Override

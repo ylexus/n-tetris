@@ -12,15 +12,14 @@ import static net.yudichev.ntetris.util.Preconditions.checkNotNull;
 abstract class GameShape {
     protected final Logger logger = LoggerFactory.getLogger(getClass());
 
+    private final Block block;
     protected final Scene scene;
     protected final GameCanvas canvas;
-    protected long lastMoveTime = -1;
-    protected long timeSinceLastMove = -1;
-    protected long gameTimeMillis = -1;
+    protected double lastMoveTime = Double.MIN_VALUE;
+    protected double timeSinceLastMove;
+    protected double gameTime;
     @Nullable
     protected Shape sourceShapeWhenTransitioning;
-
-    private Block block;
 
     protected GameShape(Scene scene, GameCanvas canvas, Block block) {
         this.scene = checkNotNull(scene);
@@ -28,9 +27,10 @@ abstract class GameShape {
         this.block = checkNotNull(block);
     }
 
-    public void onFrameStart(long gameTimeMillis) {
-        this.gameTimeMillis = gameTimeMillis;
-        if (lastMoveTime == -1) {
+    @SuppressWarnings("FloatingPointEquality")
+    public void onFrameStart(double gameTimeMillis) {
+        gameTime = gameTimeMillis;
+        if (lastMoveTime == Double.MIN_VALUE) {
             lastMoveTime = gameTimeMillis;
         }
         timeSinceLastMove = gameTimeMillis - lastMoveTime;
@@ -39,8 +39,7 @@ abstract class GameShape {
     public abstract void render();
 
     protected void renderShape(Shape destinationShape) {
-        block = block.withShape(destinationShape);
-        double transitionProportion = (double) timeSinceLastMove / DROP_TRANSITION_STEP_DURATION;
+        double transitionProportion = timeSinceLastMove / DROP_TRANSITION_STEP_DURATION;
         logger.debug("render {} src {} dest {}, proportion {}", block, sourceShapeWhenTransitioning, destinationShape, transitionProportion);
         for (int rowIdx = 0; rowIdx < destinationShape.pattern().getRows().size(); rowIdx++) {
             Row row = destinationShape.pattern().getRows().get(rowIdx);

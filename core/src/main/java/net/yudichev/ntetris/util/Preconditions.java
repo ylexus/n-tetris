@@ -17,7 +17,7 @@ public final class Preconditions {
         }
     }
 
-    public static void checkArgument(boolean expression, @Nullable String errorMessageTemplate, @Nullable Object... errorMessageArgs) {
+    public static void checkArgument(boolean expression, @Nullable String errorMessageTemplate, Object... errorMessageArgs) {
         if (!expression) {
             throw new IllegalArgumentException(format(errorMessageTemplate, errorMessageArgs));
         }
@@ -35,7 +35,7 @@ public final class Preconditions {
         }
     }
 
-    public static void checkState(boolean expression, @Nullable String errorMessageTemplate, @Nullable Object... errorMessageArgs) {
+    public static void checkState(boolean expression, @Nullable String errorMessageTemplate, Object... errorMessageArgs) {
         if (!expression) {
             throw new IllegalStateException(format(errorMessageTemplate, errorMessageArgs));
         }
@@ -57,7 +57,7 @@ public final class Preconditions {
         }
     }
 
-    public static <T> T checkNotNull(T reference, @Nullable String errorMessageTemplate, @Nullable Object... errorMessageArgs) {
+    public static <T> T checkNotNull(T reference, @Nullable String errorMessageTemplate, Object... errorMessageArgs) {
         if (reference == null) {
             throw new NullPointerException(format(errorMessageTemplate, errorMessageArgs));
         } else {
@@ -65,7 +65,7 @@ public final class Preconditions {
         }
     }
 
-    static String format(String template, @Nullable Object... args) {
+    static String format(String template, Object... args) {
         template = String.valueOf(template);
         StringBuilder builder = new StringBuilder(template.length() + 16 * args.length);
         int templateStart = 0;

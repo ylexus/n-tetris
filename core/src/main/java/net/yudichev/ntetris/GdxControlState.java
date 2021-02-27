@@ -14,12 +14,12 @@ final class GdxControlState implements ControlState {
 
     private static final Logger logger = LoggerFactory.getLogger(GdxControlState.class);
     private static final int KEY_PROCESSING_PERIOD = 100;
-    private static final Long ZERO = 0L;
+    private static final Double ZERO = 0.0;
 
     private final Set<GameControl> pressedKeys = EnumSet.noneOf(GameControl.class);
     private final Set<GameControl> unrepeatableGameControls = EnumSet.of(LEFT_PLAYER_DROP, RIGHT_PLAYER_DROP, LEFT_PLAYER_ROTATE, RIGHT_PLAYER_ROTATE, PAUSE);
     private final List<GameControl> queue = new ArrayList<>(64);
-    private final Map<GameControl, Long> timeKeyLastProcessedByGameControl = new EnumMap<>(GameControl.class);
+    private final Map<GameControl, Double> timeKeyLastProcessedByGameControl = new EnumMap<>(GameControl.class);
 
     GdxControlState() {
         Gdx.input.setInputProcessor(new InputProcessor() {
@@ -72,7 +72,7 @@ final class GdxControlState implements ControlState {
     }
 
     @Override
-    public void forAllPressedKeys(long gameTimeMillis, Consumer<GameControl> activeControlConsumer) {
+    public void forAllPressedKeys(double gameTimeMillis, Consumer<GameControl> activeControlConsumer) {
         queue.forEach(gameControl -> {
             activeControlConsumer.accept(gameControl);
             timeKeyLastProcessedByGameControl.put(gameControl, gameTimeMillis);
@@ -80,7 +80,7 @@ final class GdxControlState implements ControlState {
 
         pressedKeys.forEach(keyCode -> {
             if (!unrepeatableGameControls.contains(keyCode) && !queue.contains(keyCode)) {
-                long timeKeysLastProcessed = timeKeyLastProcessedByGameControl.getOrDefault(keyCode, ZERO);
+                double timeKeysLastProcessed = timeKeyLastProcessedByGameControl.getOrDefault(keyCode, ZERO);
                 if (gameTimeMillis - timeKeysLastProcessed > KEY_PROCESSING_PERIOD) {
                     logger.info("repeat {}", keyCode);
                     activeControlConsumer.accept(keyCode);

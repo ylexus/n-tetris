@@ -1,8 +1,8 @@
 package net.yudichev.ntetris.game;
 
-import com.badlogic.gdx.graphics.Color;
 import net.yudichev.ntetris.canvas.Block;
 import net.yudichev.ntetris.canvas.GameCanvas;
+import net.yudichev.ntetris.canvas.game.BlockLook;
 
 import static net.yudichev.ntetris.game.GameConstants.DROP_STEP_DURATION_RUBBLE;
 import static net.yudichev.ntetris.game.GameConstants.DROP_TRANSITION_STEP_DURATION;
@@ -12,7 +12,7 @@ final class RubbleBlock extends GameShape {
     private Shape shape;
 
     RubbleBlock(Scene scene, GameCanvas canvas, Shape shape) {
-        super(scene, canvas, Block.of(Color.BLUE, "rubble").withShape(shape));
+        super(scene, canvas, Block.of(BlockLook.RUBBLE_NORMAL));
         this.shape = checkNotNull(shape);
     }
 
@@ -27,13 +27,14 @@ final class RubbleBlock extends GameShape {
     }
 
     public void move() {
-        long outstandingDropSteps = timeSinceLastMove / DROP_STEP_DURATION_RUBBLE;
-        logger.debug("{}: rubble {}: timeSinceLastMove {}", gameTimeMillis, shape, timeSinceLastMove);
+        @SuppressWarnings("NumericCastThatLosesPrecision") // exactly what's intended
+        long outstandingDropSteps = (long) (timeSinceLastMove / DROP_STEP_DURATION_RUBBLE);
+        logger.debug("{}: rubble {}: timeSinceLastMove {}", gameTime, shape, timeSinceLastMove);
         if (outstandingDropSteps > 0) {
-            lastMoveTime = gameTimeMillis;
+            lastMoveTime = gameTime;
             sourceShapeWhenTransitioning = shape;
             do {
-                logger.debug("{}: rubble {}: outstanding steps {}", gameTimeMillis, shape, outstandingDropSteps);
+                logger.debug("{}: rubble {}: outstanding steps {}", gameTime, shape, outstandingDropSteps);
                 scene.moveRubble(shape);
             } while (--outstandingDropSteps > 0);
             timeSinceLastMove = 0;
