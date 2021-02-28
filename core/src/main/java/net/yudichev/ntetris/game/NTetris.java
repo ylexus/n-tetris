@@ -5,6 +5,7 @@ import net.yudichev.ntetris.Game;
 import net.yudichev.ntetris.GameControl;
 import net.yudichev.ntetris.Settings;
 import net.yudichev.ntetris.canvas.GameCanvas;
+import net.yudichev.ntetris.sound.Sounds;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -14,6 +15,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Consumer;
 
+import static net.yudichev.ntetris.sound.Sounds.Sample.RUBBLE_COLLAPSE;
 import static net.yudichev.ntetris.util.Preconditions.checkNotNull;
 
 // all time units are millis
@@ -21,36 +23,62 @@ import static net.yudichev.ntetris.util.Preconditions.checkNotNull;
 public final class NTetris implements Game {
     private static final Logger logger = LoggerFactory.getLogger(NTetris.class);
 
-    private final Map<Player, PlayerShape> shapeByPlayer = new EnumMap<>(Player.class);
-    private final Map<Shape, RubbleBlock> rubbleBlocksByShape;
+    private final Map<Player, PlayerBlock> shapeByPlayer = new EnumMap<>(Player.class);
+    private final Map<RubbleShape, RubbleBlock> rubbleBlocksByShape;
     private final ArrayList<RubbleBlock> rubbleBlockBuffer;
     private final GameCanvas canvas;
+    private final Sounds sounds;
     private final ControlState controlState;
-    private final Scene scene;
+    private final GameScene gameScene;
     private boolean gameOver;
 
     private boolean paused;
     private double lastPausedTime = Double.MIN_VALUE;
     private double totalPausedTimeSpan;
 
-    public NTetris(Settings settings, GameCanvas canvas, ControlState controlState) {
+    public NTetris(Settings settings, GameCanvas canvas, Sounds sounds, ControlState controlState) {
         this.canvas = checkNotNull(canvas);
+        this.sounds = checkNotNull(sounds);
         this.controlState = checkNotNull(controlState);
         int sceneWidthBlocks = settings.playerZoneWidthInBlocks() * 2 + 1;
         int sceneHeightBlocks = settings.playerZoneHeightInBlocks();
         rubbleBlocksByShape = new HashMap<>(sceneHeightBlocks * sceneHeightBlocks);
-        scene = new Scene(sceneWidthBlocks,
+        gameScene = new GameScene(
+                sceneWidthBlocks,
                 sceneHeightBlocks,
-                this::onNewRubbleBlock,
-                this::onRubbleBlockCollapsed,
-                this::onRubbleAmended);
-//        scene.addRubble(sceneWidthBlocks / 2, fullRow(sceneHeightBlocks));
+                new RubbleLifecycleListener() {
+                    @Override
+                    public void onRubbleAdded(RubbleShape rubbleShape) {
+                        logger.debug("New rubble {}", rubbleShape);
+                        rubbleBlocksByShape.put(rubbleShape, new RubbleBlock(gameScene, NTetris.this.canvas, rubbleShape));
+                    }
+
+                    @Override
+                    public void onRubbleRemoved(RubbleShape rubbleShape) {
+                        logger.debug("Rubble collapsed {}", rubbleShape);
+                        NTetris.this.sounds.play(RUBBLE_COLLAPSE);
+                        rubbleBlocksByShape.remove(rubbleShape);
+                    }
+
+                    @Override
+                    public void onRubbleAmended(RubbleShape oldRubbleShape, RubbleShape newRubbleShape) {
+                        RubbleBlock rubbleBlock = rubbleBlocksByShape.remove(oldRubbleShape);
+                        rubbleBlock.transitionTo(newRubbleShape);
+                        rubbleBlocksByShape.put(newRubbleShape, rubbleBlock);
+                    }
+
+                    @Override
+                    public void onRubbleColumnCollapsed(int colIdx) {
+                        // TODO hook explosion effect
+                    }
+                });
+        //        gameScene.addRubble(sceneWidthBlocks / 2, fullRow(sceneHeightBlocks));
         for (Player player : Player.ALL_PLAYERS) {
-            shapeByPlayer.put(player, new PlayerShape(player, scene, canvas));
+            shapeByPlayer.put(player, new PlayerBlock(player, gameScene, canvas));
         }
 
-        scene.addRubbleColumnWithHole(scene.getWidth() / 2, 1);
-        scene.addRubbleColumnWithHole(scene.getWidth() / 2 + 1, scene.getHeight() - 2);
+        gameScene.addRubbleColumnWithHole(gameScene.getWidth() / 2, 1);
+        gameScene.addRubbleColumnWithHole(gameScene.getWidth() / 2 + 1, gameScene.getHeight() - 2);
 
         rubbleBlockBuffer = new ArrayList<>(sceneHeightBlocks * sceneWidthBlocks);
     }
@@ -81,10 +109,10 @@ public final class NTetris implements Game {
             }
         }
         if (gameOver) {
-            forEachPlayer(PlayerShape::gameOver);
+            forEachPlayer(PlayerBlock::gameOver);
         }
 
-        forEachPlayer(PlayerShape::render);
+        forEachPlayer(PlayerBlock::render);
         rubbleBlocksByShape.values().forEach(RubbleBlock::render);
 
         if (paused) {
@@ -117,23 +145,7 @@ public final class NTetris implements Game {
         return gameTimeMillis;
     }
 
-    private void onNewRubbleBlock(Shape shape) {
-        logger.debug("New rubble {}", shape);
-        rubbleBlocksByShape.put(shape, new RubbleBlock(scene, canvas, shape));
-    }
-
-    private void onRubbleBlockCollapsed(Shape shape) {
-        logger.debug("Rubble collapsed {}", shape);
-        rubbleBlocksByShape.remove(shape);
-    }
-
-    private void onRubbleAmended(Shape oldRubbleBlock, Shape newRubbleBlock) {
-        RubbleBlock rubbleBlock = rubbleBlocksByShape.remove(oldRubbleBlock);
-        rubbleBlock.transitionTo(newRubbleBlock);
-        rubbleBlocksByShape.put(newRubbleBlock, rubbleBlock);
-    }
-
-    private void forEachPlayer(Consumer<PlayerShape> action) {
+    private void forEachPlayer(Consumer<PlayerBlock> action) {
         for (int i = 0; i < Player.ALL_PLAYERS.length; i++) {
             action.accept(shapeByPlayer.get(Player.ALL_PLAYERS[i]));
         }
@@ -147,28 +159,28 @@ public final class NTetris implements Game {
             if (!paused) {
                 switch (gameControl) {
                     case LEFT_PLAYER_UP:
-                        scene.movePlayerShapeVertically(Player.LEFT, -1);
+                        gameScene.movePlayerShapeVertically(Player.LEFT, -1);
                         break;
                     case LEFT_PLAYER_DOWN:
-                        scene.movePlayerShapeVertically(Player.LEFT, 1);
+                        gameScene.movePlayerShapeVertically(Player.LEFT, 1);
                         break;
                     case RIGHT_PLAYER_UP:
-                        scene.movePlayerShapeVertically(Player.RIGHT, -1);
+                        gameScene.movePlayerShapeVertically(Player.RIGHT, -1);
                         break;
                     case RIGHT_PLAYER_DOWN:
-                        scene.movePlayerShapeVertically(Player.RIGHT, 1);
+                        gameScene.movePlayerShapeVertically(Player.RIGHT, 1);
                         break;
                     case LEFT_PLAYER_ROTATE:
-                        scene.rotatePlayersShape(Player.LEFT);
+                        gameScene.rotatePlayersShape(Player.LEFT);
                         break;
                     case RIGHT_PLAYER_ROTATE:
-                        scene.rotatePlayersShape(Player.RIGHT);
+                        gameScene.rotatePlayersShape(Player.RIGHT);
                         break;
                     case LEFT_PLAYER_DROP:
-                        shapeByPlayer.get(Player.LEFT).dropShape();
+                        shapeByPlayer.get(Player.LEFT).drop();
                         break;
                     case RIGHT_PLAYER_DROP:
-                        shapeByPlayer.get(Player.RIGHT).dropShape();
+                        shapeByPlayer.get(Player.RIGHT).drop();
                         break;
                 }
             }

@@ -6,7 +6,7 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import net.yudichev.ntetris.Settings;
-import net.yudichev.ntetris.canvas.game.BlockLook;
+import net.yudichev.ntetris.canvas.game.Sprite;
 
 import java.util.EnumMap;
 import java.util.Map;
@@ -24,7 +24,7 @@ public final class GdxGameCanvas implements GameCanvas {
     private final OrthographicCamera camera;
     private final double blockWidth;
     private final double blockHeight;
-    private final Map<BlockLook, Texture> blockTextureByLook;
+    private final Map<Sprite, Texture> blockTextureByLook;
 
     public GdxGameCanvas(Settings settings) {
 //        img = new Texture("badlogic.jpg");
@@ -33,7 +33,7 @@ public final class GdxGameCanvas implements GameCanvas {
         font.setColor(Color.BLACK);
         blockWidth = 1.0f / (settings.playerZoneWidthInBlocks() * 2);
         blockHeight = 1.0f / settings.playerZoneHeightInBlocks();
-        blockTextureByLook = new EnumMap<>(Stream.of(BlockLook.values())
+        blockTextureByLook = new EnumMap<>(Stream.of(Sprite.values())
                 .collect(toMap(Function.identity(), blockLook -> new Texture("BLOCK_" + blockLook.name() + ".png"))));
     }
 
@@ -51,7 +51,7 @@ public final class GdxGameCanvas implements GameCanvas {
         double pixelX = x - blockWidth / 2;
         double pixelY = y - blockHeight / 2;
 
-        batch.draw(blockTextureByLook.get(block.look()), toCamera(pixelX), toCamera(pixelY), toCamera(blockWidth), toCamera(blockHeight));
+        batch.draw(blockTextureByLook.get(block.sprite()), toCamera(pixelX), toCamera(pixelY), toCamera(blockWidth), toCamera(blockHeight));
 //        shapeRenderer.setColor(block.color());
 //        shapeRenderer.rect();
     }

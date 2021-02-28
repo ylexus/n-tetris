@@ -5,6 +5,7 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.GL20;
 import net.yudichev.ntetris.canvas.GdxGameCanvas;
 import net.yudichev.ntetris.game.NTetris;
+import net.yudichev.ntetris.sound.GdxSounds;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -14,6 +15,7 @@ public class GdxGame extends ApplicationAdapter {
     private double gameTimeMillis = Float.MIN_VALUE;
     private Game game;
     private GdxGameCanvas canvas;
+    private GdxSounds sounds;
 
     @Override
     public void create() {
@@ -23,7 +25,8 @@ public class GdxGame extends ApplicationAdapter {
                 .build();
 
         canvas = new GdxGameCanvas(settings);
-        game = new NTetris(settings, canvas, new GdxControlState());
+        sounds = new GdxSounds();
+        game = new NTetris(settings, canvas, sounds, new GdxControlState());
     }
 
     @Override
@@ -44,5 +47,6 @@ public class GdxGame extends ApplicationAdapter {
     @Override
     public void dispose() {
         canvas.close();
+        sounds.close();
     }
 }

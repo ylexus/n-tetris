@@ -10,7 +10,7 @@ import java.util.Optional;
 @PublicImmutablesStyle
 interface BasePlayerShapeState {
     @Value.Parameter
-    Shape currentShape();
+    PlayerShape currentShape();
 
-    Optional<Shape> nextShape();
+    Optional<PlayerShape> nextShape();
 }

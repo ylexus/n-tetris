@@ -6,13 +6,13 @@ import net.yudichev.ntetris.canvas.GameCanvas;
 import java.util.Random;
 import java.util.function.IntFunction;
 
-import static net.yudichev.ntetris.canvas.game.BlockLook.LEFT_PLAYER_NORMAL;
-import static net.yudichev.ntetris.canvas.game.BlockLook.RIGHT_PLAYER_NORMAL;
+import static net.yudichev.ntetris.canvas.game.Sprite.LEFT_PLAYER_NORMAL;
+import static net.yudichev.ntetris.canvas.game.Sprite.RIGHT_PLAYER_NORMAL;
 import static net.yudichev.ntetris.game.GameConstants.*;
-import static net.yudichev.ntetris.game.Scene.ShapeLoweringResult;
+import static net.yudichev.ntetris.game.GameScene.ShapeLoweringResult;
 import static net.yudichev.ntetris.util.Preconditions.checkNotNull;
 
-final class PlayerShape extends GameShape {
+final class PlayerBlock extends GameBlock<PlayerShape> {
 
     private static final PlayerShapeType[] ALL_SHAPE_TYPES = PlayerShapeType.values();
 
@@ -24,8 +24,8 @@ final class PlayerShape extends GameShape {
     private double penaltyDeadline = Double.MIN_VALUE;
     private boolean gameOver;
 
-    PlayerShape(Player player, Scene scene, GameCanvas canvas) {
-        super(scene, canvas, Block.of(player == Player.LEFT ? LEFT_PLAYER_NORMAL : RIGHT_PLAYER_NORMAL));
+    PlayerBlock(Player player, GameScene gameScene, GameCanvas canvas) {
+        super(gameScene, canvas, Block.of(player == Player.LEFT ? LEFT_PLAYER_NORMAL : RIGHT_PLAYER_NORMAL));
         this.player = checkNotNull(player);
     }
 
@@ -35,10 +35,10 @@ final class PlayerShape extends GameShape {
         logger.debug("{}: {}:  timeSinceLastMove {}", gameTime, player, timeSinceLastMove);
         if (outstandingDropSteps > 0) {
             lastMoveTime = gameTime;
-            sourceShapeWhenTransitioning = scene.getPlayerShapesByPlayer().get(player);
+            sourceShapeWhenTransitioning = gameScene.getPlayerShapesByPlayer().get(player);
             do {
                 logger.debug("{}: {}: outstanding steps {}", gameTime, player, outstandingDropSteps);
-                ShapeLoweringResult loweringResult = scene.lowerShape(player);
+                ShapeLoweringResult loweringResult = gameScene.lowerShape(player);
                 logger.debug("player lowering results {}", loweringResult);
                 if (loweringResult != null) {
                     processLoweringResult(loweringResult);
@@ -53,7 +53,7 @@ final class PlayerShape extends GameShape {
         }
 
         boolean shouldContinueGame = true;
-        if (!scene.getPlayerShapesByPlayer().containsKey(player) && !gameOver) {
+        if (!gameScene.getPlayerShapesByPlayer().containsKey(player) && !gameOver) {
             // player has no shape - spawn one (if not on penalty)!
             if (shouldSpawnNewShape()) {
                 shouldContinueGame = attemptToSpawnNewShape(player);
@@ -63,13 +63,13 @@ final class PlayerShape extends GameShape {
         }
         gameOver = !shouldContinueGame;
         if (gameOver) {
-            scene.deletePlayerShape(player);
+            gameScene.deletePlayerShape(player);
         }
         return shouldContinueGame;
     }
 
-    public void dropShape() {
-        ShapeLoweringResult shapeLoweringResult = scene.dropShape(player);
+    public void drop() {
+        ShapeLoweringResult shapeLoweringResult = gameScene.dropShape(player);
         if (shapeLoweringResult != null) {
             processLoweringResult(shapeLoweringResult);
         }
@@ -77,7 +77,7 @@ final class PlayerShape extends GameShape {
 
     @Override
     public void render() {
-        Shape destinationShape = scene.getPlayerShapesByPlayer().get(player);
+        PlayerShape destinationShape = gameScene.getPlayerShapesByPlayer().get(player);
         if (destinationShape != null) {
             renderShape(destinationShape);
         }
@@ -85,7 +85,7 @@ final class PlayerShape extends GameShape {
 
     public void gameOver() {
         gameOver = true;
-        scene.deletePlayerShape(player);
+        gameScene.deletePlayerShape(player);
     }
 
     private void stopTransitioning() {
@@ -94,7 +94,7 @@ final class PlayerShape extends GameShape {
 
     @SuppressWarnings("FloatingPointEquality")
     private boolean shouldSpawnNewShape() {
-        logger.info("{}: player {} has no shape, deadline {}", gameTime, player, penaltyDeadline);
+        logger.debug("{}: player {} has no shape, deadline {}", gameTime, player, penaltyDeadline);
         if (penaltyDeadline == Double.MIN_VALUE) {
             return true;
         }
@@ -115,18 +115,18 @@ final class PlayerShape extends GameShape {
                 horizontalSpeed = 1;
                 break;
             case RIGHT:
-                horizontalOffset = scene.getWidth() - shape.getPattern().height();
+                horizontalOffset = gameScene.getWidth() - shape.getPattern().height();
                 horizontalSpeed = -1;
                 break;
             default:
                 throw new IllegalArgumentException("Unsupported player " + player);
         }
 
-        int verticalOffsetRange = scene.getHeight() - shape.getPattern().width();
+        int verticalOffsetRange = gameScene.getHeight() - shape.getPattern().width();
 
         return findSpawnPointAndSpawn(
                 verticalOffsetRange,
-                verticalOffset -> scene.attemptAddPlayerShape(player, Shape.of(shape.getPattern(),
+                verticalOffset -> gameScene.attemptAddPlayerShape(player, PlayerShape.of(shape.getPattern(),
                         horizontalOffset,
                         verticalOffset,
                         horizontalSpeed)));
@@ -185,7 +185,7 @@ final class PlayerShape extends GameShape {
     private void processLoweringResult(ShapeLoweringResult shapeLoweringResult) {
         if (shapeLoweringResult == ShapeLoweringResult.REACHED_BOTTOM) {
             penaltyDeadline = gameTime + PLAYER_PENALTY_PAUSE;
-            logger.info("Player {} reached bottom, penalty until {}", player, penaltyDeadline);
+            logger.debug("Player {} reached bottom, penalty until {}", player, penaltyDeadline);
         }
     }
 }

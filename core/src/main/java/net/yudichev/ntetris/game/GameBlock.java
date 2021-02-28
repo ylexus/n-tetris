@@ -9,20 +9,20 @@ import org.slf4j.LoggerFactory;
 import static net.yudichev.ntetris.game.GameConstants.DROP_TRANSITION_STEP_DURATION;
 import static net.yudichev.ntetris.util.Preconditions.checkNotNull;
 
-abstract class GameShape {
+abstract class GameBlock<S extends Shape<S>> {
     protected final Logger logger = LoggerFactory.getLogger(getClass());
 
     private final Block block;
-    protected final Scene scene;
+    protected final GameScene gameScene;
     protected final GameCanvas canvas;
     protected double lastMoveTime = Double.MIN_VALUE;
     protected double timeSinceLastMove;
     protected double gameTime;
     @Nullable
-    protected Shape sourceShapeWhenTransitioning;
+    protected S sourceShapeWhenTransitioning;
 
-    protected GameShape(Scene scene, GameCanvas canvas, Block block) {
-        this.scene = checkNotNull(scene);
+    protected GameBlock(GameScene gameScene, GameCanvas canvas, Block block) {
+        this.gameScene = checkNotNull(gameScene);
         this.canvas = checkNotNull(canvas);
         this.block = checkNotNull(block);
     }
@@ -38,7 +38,7 @@ abstract class GameShape {
 
     public abstract void render();
 
-    protected void renderShape(Shape destinationShape) {
+    protected void renderShape(S destinationShape) {
         double transitionProportion = timeSinceLastMove / DROP_TRANSITION_STEP_DURATION;
         logger.debug("render {} src {} dest {}, proportion {}", block, sourceShapeWhenTransitioning, destinationShape, transitionProportion);
         for (int rowIdx = 0; rowIdx < destinationShape.pattern().getRows().size(); rowIdx++) {
@@ -57,7 +57,7 @@ abstract class GameShape {
                         logger.debug("render {} trans to {}, {}", block, targetAbsRowIdx, targetAbsColIdx);
                     }
                     logger.debug("render {} block {},{} at {}, {}", block, rowIdx, colIdx, targetAbsRowIdx, targetAbsColIdx);
-                    canvas.renderBlock(scene.blockToAbsHorizontal(targetAbsRowIdx), scene.blockToAbsVertical(targetAbsColIdx), block);
+                    canvas.renderBlock(gameScene.blockToAbsHorizontal(targetAbsRowIdx), gameScene.blockToAbsVertical(targetAbsColIdx), block);
                 }
             }
         }
