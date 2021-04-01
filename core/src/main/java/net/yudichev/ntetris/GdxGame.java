@@ -6,12 +6,8 @@ import com.badlogic.gdx.graphics.GL20;
 import net.yudichev.ntetris.canvas.GdxGameCanvas;
 import net.yudichev.ntetris.game.NTetris;
 import net.yudichev.ntetris.sound.GdxSounds;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class GdxGame extends ApplicationAdapter {
-    private static final Logger logger = LoggerFactory.getLogger(GdxGame.class);
-
     private double gameTimeMillis = Float.MIN_VALUE;
     private Game game;
     private GdxGameCanvas canvas;
@@ -19,14 +15,17 @@ public class GdxGame extends ApplicationAdapter {
 
     @Override
     public void create() {
+        int height = 15;
         Settings settings = Settings.builder()
-                .setPlayerZoneHeightInBlocks(30)
-                .setPlayerZoneWidthInBlocks(30 / 3 * 5 / 2)
+                .setSceneHeightBlocks(height)
+                .setSceneWidthBlocks(height * 5 / 3)
                 .build();
 
         canvas = new GdxGameCanvas(settings);
         sounds = new GdxSounds();
-        game = new NTetris(settings, canvas, sounds, new GdxControlState());
+        NTetris tetris = new NTetris(settings, canvas, sounds, new GdxControlState());
+        tetris.addRubbleColumnWithHole(settings.sceneWidthBlocks() / 2, settings.sceneHeightBlocks() / 2);
+        game = tetris;
     }
 
     @Override

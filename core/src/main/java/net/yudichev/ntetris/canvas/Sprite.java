@@ -1,4 +1,4 @@
-package net.yudichev.ntetris.canvas.game;
+package net.yudichev.ntetris.canvas;
 
 public enum Sprite {
     LEFT_PLAYER_NORMAL,

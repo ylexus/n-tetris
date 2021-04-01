@@ -1,7 +1,7 @@
 package net.yudichev.ntetris.game;
 
-import net.yudichev.ntetris.canvas.Block;
 import net.yudichev.ntetris.canvas.GameCanvas;
+import net.yudichev.ntetris.canvas.Sprite;
 import net.yudichev.ntetris.util.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -11,53 +11,49 @@ import static net.yudichev.ntetris.util.Preconditions.checkNotNull;
 
 abstract class GameBlock<S extends Shape<S>> {
     protected final Logger logger = LoggerFactory.getLogger(getClass());
-
-    private final Block block;
-    protected final GameScene gameScene;
-    protected final GameCanvas canvas;
+    private final Sprite sprite;
     protected double lastMoveTime = Double.MIN_VALUE;
     protected double timeSinceLastMove;
     protected double gameTime;
     @Nullable
     protected S sourceShapeWhenTransitioning;
 
-    protected GameBlock(GameScene gameScene, GameCanvas canvas, Block block) {
-        this.gameScene = checkNotNull(gameScene);
-        this.canvas = checkNotNull(canvas);
-        this.block = checkNotNull(block);
+    protected GameBlock(Sprite sprite, double creationGameTime) {
+        this.sprite = checkNotNull(sprite);
+        onFrameStart(creationGameTime);
     }
 
     @SuppressWarnings("FloatingPointEquality")
-    public void onFrameStart(double gameTimeMillis) {
-        gameTime = gameTimeMillis;
+    public final void onFrameStart(double gameTime) {
+        this.gameTime = gameTime;
         if (lastMoveTime == Double.MIN_VALUE) {
-            lastMoveTime = gameTimeMillis;
+            lastMoveTime = gameTime;
         }
-        timeSinceLastMove = gameTimeMillis - lastMoveTime;
+        timeSinceLastMove = gameTime - lastMoveTime;
     }
 
-    public abstract void render();
+    public abstract void render(GameCanvas canvas);
 
-    protected void renderShape(S destinationShape) {
+    protected void renderShape(GameCanvas canvas, S destinationShape) {
         double transitionProportion = timeSinceLastMove / DROP_TRANSITION_STEP_DURATION;
-        logger.debug("render {} src {} dest {}, proportion {}", block, sourceShapeWhenTransitioning, destinationShape, transitionProportion);
-        for (int rowIdx = 0; rowIdx < destinationShape.pattern().getRows().size(); rowIdx++) {
-            Row row = destinationShape.pattern().getRows().get(rowIdx);
-            for (int colIdx = 0; colIdx < row.getElements().length; colIdx++) {
-                if (row.getElements()[colIdx]) {
-                    double targetAbsRowIdx = rowIdx + destinationShape.horizontalOffset();
-                    double targetAbsColIdx = colIdx + destinationShape.verticalOffset();
+        logger.debug("render {} src {} dest {}, proportion {}", sprite, sourceShapeWhenTransitioning, destinationShape, transitionProportion);
+        for (int patternY = 0; patternY < destinationShape.height(); patternY++) {
+            Row row = destinationShape.pattern().getRows().get(patternY);
+            for (int patternX = 0; patternX < row.getElements().length; patternX++) {
+                if (row.getElements()[patternX]) {
+                    double targetAbsX = destinationShape.toAbsoluteX(patternX);
+                    double targetAbsY = destinationShape.toAbsoluteY(patternY);
                     if (sourceShapeWhenTransitioning != null) {
                         // extrapolate transition
-                        int sourceAbsRowIdx = rowIdx + sourceShapeWhenTransitioning.horizontalOffset();
-                        int sourceAbsColIdx = colIdx + sourceShapeWhenTransitioning.verticalOffset();
-                        logger.debug("render {} trans from {}, {} -> {}, {}", block, sourceAbsRowIdx, sourceAbsColIdx, targetAbsRowIdx, targetAbsColIdx);
-                        targetAbsRowIdx = sourceAbsRowIdx + (targetAbsRowIdx - sourceAbsRowIdx) * transitionProportion;
-                        targetAbsColIdx = sourceAbsColIdx + (targetAbsColIdx - sourceAbsColIdx) * transitionProportion;
-                        logger.debug("render {} trans to {}, {}", block, targetAbsRowIdx, targetAbsColIdx);
+                        int sourceAbsY = sourceShapeWhenTransitioning.toAbsoluteY(patternY);
+                        int sourceAbsX = sourceShapeWhenTransitioning.toAbsoluteX(patternX);
+                        logger.debug("render {} trans from {}, {} -> {}, {}", sprite, sourceAbsX, sourceAbsY, targetAbsX, targetAbsY);
+                        targetAbsX = sourceAbsX + (targetAbsX - sourceAbsX) * transitionProportion;
+                        targetAbsY = sourceAbsY + (targetAbsY - sourceAbsY) * transitionProportion;
+                        logger.debug("render {} trans to {}, {}", sprite, targetAbsX, targetAbsY);
                     }
-                    logger.debug("render {} block {},{} at {}, {}", block, rowIdx, colIdx, targetAbsRowIdx, targetAbsColIdx);
-                    canvas.renderBlock(gameScene.blockToAbsHorizontal(targetAbsRowIdx), gameScene.blockToAbsVertical(targetAbsColIdx), block);
+                    logger.debug("render {} block {},{} at {}, {}", sprite, patternX, patternY, targetAbsX, targetAbsY);
+                    canvas.renderBlock(targetAbsX, targetAbsY, sprite, 1.0);
                 }
             }
         }

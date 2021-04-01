@@ -1,5 +1,6 @@
 # Project exclude paths
 /.gradle/
+/.idea/GrepConsole.xml
 */build/
 ios/robovm-build/
 android/assets/build/

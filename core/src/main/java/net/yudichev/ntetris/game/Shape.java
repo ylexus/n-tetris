@@ -10,33 +10,41 @@ abstract class Shape<B extends Shape<B>> {
     public abstract RectangularPattern pattern();
 
     @Value.Parameter
-    public abstract int horizontalOffset();
+    public abstract int offsetX();
 
     @Value.Parameter
-    public abstract int verticalOffset();
+    public abstract int offsetY();
 
     @Value.Parameter
-    public abstract int horizontalSpeed();
+    public abstract int speedX();
+
+    public final int width() {
+        return pattern().width();
+    }
+
+    public final int height() {
+        return pattern().height();
+    }
 
     public final B move() {
-        return (B) withHorizontalOffset(horizontalOffset() + horizontalSpeed());
+        return (B) withOffsetX(offsetX() + speedX());
     }
 
     @SuppressWarnings("override")
-    protected abstract B withHorizontalOffset(int horizontalOffset);
+    protected abstract B withOffsetX(int horizontalOffset);
 
     public final boolean overlapsWith(B another) {
         // more likely to overlap in the direction of our movement
         List<Row> rows = pattern().getRows();
-        if (horizontalSpeed() > 0) {
-            for (int rowIdx = rows.size() - 1; rowIdx >= 0; rowIdx--) {
-                if (rowOverlaps(another, rowIdx)) {
+        if (speedX() > 0) {
+            for (int patternY = rows.size() - 1; patternY >= 0; patternY--) {
+                if (rowOverlaps(another, patternY)) {
                     return true;
                 }
             }
         } else {
-            for (int rowIdx = 0; rowIdx < rows.size(); rowIdx++) {
-                if (rowOverlaps(another, rowIdx)) {
+            for (int patternY = 0; patternY < rows.size(); patternY++) {
+                if (rowOverlaps(another, patternY)) {
                     return true;
                 }
             }
@@ -44,27 +52,35 @@ abstract class Shape<B extends Shape<B>> {
         return false;
     }
 
-    public boolean hasElementAtAbsoluteCoordinates(int absoluteRowIdx, int absoluteColIdx) {
-        int relativeRowIdx = absoluteRowIdx - horizontalOffset();
-        int relativeColIdx = absoluteColIdx - verticalOffset();
-        if (relativeRowIdx < 0 || relativeRowIdx >= pattern().height() || relativeColIdx < 0 || relativeColIdx >= pattern().width()) {
+    public boolean hasElementAtAbsoluteCoordinates(int absoluteY, int absoluteX) {
+        int patternY = absoluteY - offsetY();
+        int patternX = absoluteX - offsetX();
+        if (patternY < 0 || patternY >= height() || patternX < 0 || patternX >= width()) {
             return false;
         }
-        return pattern().hasElementAt(relativeRowIdx, relativeColIdx);
+        return pattern().hasElementAt(patternX, patternY);
     }
 
     public final boolean touchingVerticalEdge(int sceneWidth) {
-        return horizontalOffset() == 0 || horizontalOffset() + pattern().height() == sceneWidth;
+        return offsetX() == 0 || offsetX() + width() == sceneWidth;
     }
 
-    private boolean rowOverlaps(B anotherShape, int rowIdx) {
-        int absoluteRowIdx = rowIdx + horizontalOffset();
-        Row candidateRow = pattern().getRows().get(rowIdx);
+    public int toAbsoluteX(int patternX) {
+        return offsetX() + patternX;
+    }
+
+    public int toAbsoluteY(int patternY) {
+        return offsetY() + patternY;
+    }
+
+    private boolean rowOverlaps(B anotherShape, int patternY) {
+        Row candidateRow = pattern().getRows().get(patternY);
+        int absoluteY = toAbsoluteY(patternY);
         boolean[] elements = candidateRow.getElements();
-        for (int colIdx = 0; colIdx < elements.length; colIdx++) {
-            if (elements[colIdx]) {
-                int absoluteColIdx = colIdx + verticalOffset();
-                if (anotherShape.hasElementAtAbsoluteCoordinates(absoluteRowIdx, absoluteColIdx)) {
+        for (int patternX = 0; patternX < elements.length; patternX++) {
+            if (elements[patternX]) {
+                int absoluteX = toAbsoluteX(patternX);
+                if (anotherShape.hasElementAtAbsoluteCoordinates(absoluteY, absoluteX)) {
                     return true;
                 }
             }

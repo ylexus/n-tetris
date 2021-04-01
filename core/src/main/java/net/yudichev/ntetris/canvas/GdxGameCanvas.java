@@ -6,7 +6,6 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import net.yudichev.ntetris.Settings;
-import net.yudichev.ntetris.canvas.game.Sprite;
 
 import java.util.EnumMap;
 import java.util.Map;
@@ -24,16 +23,20 @@ public final class GdxGameCanvas implements GameCanvas {
     private final OrthographicCamera camera;
     private final double blockWidth;
     private final double blockHeight;
-    private final Map<Sprite, Texture> blockTextureByLook;
+    private final Map<Sprite, Texture> blockTextureBySprite;
+    private final int sceneWidthBlocks;
+    private final int sceneHeightBlocks;
 
     public GdxGameCanvas(Settings settings) {
 //        img = new Texture("badlogic.jpg");
         camera = new OrthographicCamera();
         camera.setToOrtho(true, CAMERA_SIDE_LENGTH, CAMERA_SIDE_LENGTH);
         font.setColor(Color.BLACK);
-        blockWidth = 1.0f / (settings.playerZoneWidthInBlocks() * 2);
-        blockHeight = 1.0f / settings.playerZoneHeightInBlocks();
-        blockTextureByLook = new EnumMap<>(Stream.of(Sprite.values())
+        sceneWidthBlocks = settings.sceneWidthBlocks();
+        blockWidth = 1.0 / sceneWidthBlocks;
+        sceneHeightBlocks = settings.sceneHeightBlocks();
+        blockHeight = 1.0 / sceneHeightBlocks;
+        blockTextureBySprite = new EnumMap<>(Stream.of(Sprite.values())
                 .collect(toMap(Function.identity(), blockLook -> new Texture("BLOCK_" + blockLook.name() + ".png"))));
     }
 
@@ -47,11 +50,13 @@ public final class GdxGameCanvas implements GameCanvas {
     }
 
     @Override
-    public void renderBlock(double x, double y, Block block) {
-        double pixelX = x - blockWidth / 2;
-        double pixelY = y - blockHeight / 2;
+    public void renderBlock(double blockX, double blockY, Sprite sprite, double scale) {
+        double drawBlockWidth = blockWidth * scale;
+        double drawBlockHeight = blockHeight * scale;
+        double x = blockToAbsX(blockX) - drawBlockWidth / 2;
+        double y = blockToAbsY(blockY) - drawBlockHeight / 2;
 
-        batch.draw(blockTextureByLook.get(block.sprite()), toCamera(pixelX), toCamera(pixelY), toCamera(blockWidth), toCamera(blockHeight));
+        batch.draw(blockTextureBySprite.get(sprite), toCamera(x), toCamera(y), toCamera(drawBlockWidth), toCamera(drawBlockHeight));
 //        shapeRenderer.setColor(block.color());
 //        shapeRenderer.rect();
     }
@@ -67,6 +72,14 @@ public final class GdxGameCanvas implements GameCanvas {
         batch.end();
     }
 
+    private double blockToAbsX(double blockX) {
+        return (blockX + 0.5) / sceneWidthBlocks;
+    }
+
+    private double blockToAbsY(double blockY) {
+        return (blockY + 0.5) / sceneHeightBlocks;
+    }
+
     private static float toCamera(double value) {
         return (float) (value * CAMERA_SIDE_LENGTH);
     }
@@ -76,6 +89,6 @@ public final class GdxGameCanvas implements GameCanvas {
         font.dispose();
 //        shapeRenderer.dispose();
         batch.dispose();
-        blockTextureByLook.values().forEach(Texture::dispose);
+        blockTextureBySprite.values().forEach(Texture::dispose);
     }
 }

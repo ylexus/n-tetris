@@ -51,8 +51,8 @@ final class RectangularPattern {
         return rows;
     }
 
-    public boolean hasElementAt(int rowIndex, int columnIndex) {
-        return rows.get(rowIndex).elementAt(columnIndex);
+    public boolean hasElementAt(int x, int y) {
+        return rows.get(y).elementAt(x);
     }
 
     @Override

@@ -3,7 +3,7 @@ package net.yudichev.ntetris.canvas;
 public interface GameCanvas {
     void beginFrame();
 
-    void renderBlock(double x, double y, Block block);
+    void renderBlock(double blockX, double blockY, Sprite sprite, double scale);
 
     void renderText(String text);
 

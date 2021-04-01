@@ -29,12 +29,16 @@ final class Row {
         return new Row(elements, 0, elements.length);
     }
 
+    /**
+     * @return the row, leftmost elements first
+     */
     public static Row row(boolean... elements) {
         return new Row(elements, 0, elements.length);
     }
 
-    @SuppressWarnings("AssignmentOrReturnOfFieldWithMutableType") // mutable for GC/perf reasons
-    public boolean[] getElements() {
+    @SuppressWarnings("AssignmentOrReturnOfFieldWithMutableType")
+        // mutable for GC/perf reasons
+    boolean[] getElements() {
         return elements;
     }
 

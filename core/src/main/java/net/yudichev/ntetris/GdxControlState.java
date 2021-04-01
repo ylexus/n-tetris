@@ -27,7 +27,7 @@ final class GdxControlState implements ControlState {
             public boolean keyDown(int keyCode) {
                 GameControl gameControl = gdxKeyCodeToControl(keyCode);
                 if (gameControl != null && pressedKeys.add(gameControl)) {
-                    logger.info("pressed {}", gameControl);
+                    logger.debug("pressed {}", gameControl);
                     queue.add(gameControl);
                 }
                 return true;
@@ -82,7 +82,7 @@ final class GdxControlState implements ControlState {
             if (!unrepeatableGameControls.contains(keyCode) && !queue.contains(keyCode)) {
                 double timeKeysLastProcessed = timeKeyLastProcessedByGameControl.getOrDefault(keyCode, ZERO);
                 if (gameTimeMillis - timeKeysLastProcessed > KEY_PROCESSING_PERIOD) {
-                    logger.info("repeat {}", keyCode);
+                    logger.debug("repeat {}", keyCode);
                     activeControlConsumer.accept(keyCode);
                     timeKeyLastProcessedByGameControl.put(keyCode, gameTimeMillis);
                 }

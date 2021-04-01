@@ -1,13 +1,12 @@
 package net.yudichev.ntetris.game;
 
-import net.yudichev.ntetris.canvas.Block;
 import net.yudichev.ntetris.canvas.GameCanvas;
 
 import java.util.Random;
 import java.util.function.IntFunction;
 
-import static net.yudichev.ntetris.canvas.game.Sprite.LEFT_PLAYER_NORMAL;
-import static net.yudichev.ntetris.canvas.game.Sprite.RIGHT_PLAYER_NORMAL;
+import static net.yudichev.ntetris.canvas.Sprite.LEFT_PLAYER_NORMAL;
+import static net.yudichev.ntetris.canvas.Sprite.RIGHT_PLAYER_NORMAL;
 import static net.yudichev.ntetris.game.GameConstants.*;
 import static net.yudichev.ntetris.game.GameScene.ShapeLoweringResult;
 import static net.yudichev.ntetris.util.Preconditions.checkNotNull;
@@ -17,6 +16,7 @@ final class PlayerBlock extends GameBlock<PlayerShape> {
     private static final PlayerShapeType[] ALL_SHAPE_TYPES = PlayerShapeType.values();
 
     private final Random random = new Random();
+    private final GameScene gameScene;
     /**
      * -1 means no deadline
      */
@@ -24,9 +24,10 @@ final class PlayerBlock extends GameBlock<PlayerShape> {
     private double penaltyDeadline = Double.MIN_VALUE;
     private boolean gameOver;
 
-    PlayerBlock(Player player, GameScene gameScene, GameCanvas canvas) {
-        super(gameScene, canvas, Block.of(player == Player.LEFT ? LEFT_PLAYER_NORMAL : RIGHT_PLAYER_NORMAL));
+    PlayerBlock(Player player, GameScene gameScene, double creationGameTime) {
+        super(player == Player.LEFT ? LEFT_PLAYER_NORMAL : RIGHT_PLAYER_NORMAL, creationGameTime);
         this.player = checkNotNull(player);
+        this.gameScene = checkNotNull(gameScene);
     }
 
     public boolean lower() {
@@ -76,10 +77,10 @@ final class PlayerBlock extends GameBlock<PlayerShape> {
     }
 
     @Override
-    public void render() {
+    public void render(GameCanvas canvas) {
         PlayerShape destinationShape = gameScene.getPlayerShapesByPlayer().get(player);
         if (destinationShape != null) {
-            renderShape(destinationShape);
+            renderShape(canvas, destinationShape);
         }
     }
 
@@ -115,14 +116,14 @@ final class PlayerBlock extends GameBlock<PlayerShape> {
                 horizontalSpeed = 1;
                 break;
             case RIGHT:
-                horizontalOffset = gameScene.getWidth() - shape.getPattern().height();
+                horizontalOffset = gameScene.getWidth() - shape.getPattern().width();
                 horizontalSpeed = -1;
                 break;
             default:
                 throw new IllegalArgumentException("Unsupported player " + player);
         }
 
-        int verticalOffsetRange = gameScene.getHeight() - shape.getPattern().width();
+        int verticalOffsetRange = gameScene.getHeight() - shape.getPattern().height();
 
         return findSpawnPointAndSpawn(
                 verticalOffsetRange,

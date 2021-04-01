@@ -1,5 +1,5 @@
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="Tests in 'n-tetris.core.test'" type="GradleRunConfiguration" factoryName="Gradle">
+  <configuration default="false" name="All tests in 'n-tetris.core.test'" type="GradleRunConfiguration" factoryName="Gradle">
     <ExternalSystemSettings>
       <option name="executionName" />
       <option name="externalProjectPath" value="$PROJECT_DIR$" />
