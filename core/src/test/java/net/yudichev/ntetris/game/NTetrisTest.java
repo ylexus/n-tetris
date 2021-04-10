@@ -182,7 +182,7 @@ class NTetrisTest {
         int width = scenario.substring(0, scenario.indexOf('\n')).length() / 5;
         return Settings.builder()
                 .setSceneWidthBlocks(width)
-                .setSceneHeightBlocks(scenario.length() / (width * 5 + 1))
+                .setSceneHeightBlocks(scenario.trim().split("\n").length)
                 .build();
     }
 }
