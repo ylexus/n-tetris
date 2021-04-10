@@ -1,6 +1,7 @@
 package net.yudichev.ntetris.game;
 
 import net.yudichev.ntetris.NoopGameJournal;
+import net.yudichev.ntetris.Settings;
 import net.yudichev.ntetris.canvas.GameCanvas;
 import net.yudichev.ntetris.canvas.Sprite;
 import net.yudichev.ntetris.journal.JournalPlayer;
@@ -50,12 +51,14 @@ final class JournalReplayingTest {
     @Test
     void hangingScenario1() {
         JournalPlayer player = new JournalPlayer("journal-hangingScenario1.txt", gameTime -> tetris.render(gameTime));
-        tetris = new NTetris(player.settings(),
+        Settings settings = player.settings();
+        tetris = new NTetris(settings,
                 canvas,
                 sounds,
                 player.controlState(),
                 new NoopGameJournal(),
                 player.randomNumberGenerator());
+        tetris.addRubbleColumnWithHole(settings.sceneWidthBlocks() / 2, settings.sceneHeightBlocks() / 2);
         try {
             player.play();
         } finally {

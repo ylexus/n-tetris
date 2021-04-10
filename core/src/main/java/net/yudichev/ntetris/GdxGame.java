@@ -28,13 +28,15 @@ public class GdxGame extends ApplicationAdapter {
         canvas = new GdxGameCanvas(settings);
         sounds = new GdxSounds();
         Random random = new Random();
-        game = new NTetris(settings,
+        NTetris nTetris = new NTetris(settings,
                 canvas,
                 sounds,
                 new GdxControlState(),
 //                new NoopGameJournal(),
                 new FileJournal(Paths.get("journal.txt")), // TODO remove
                 random::nextInt);
+        nTetris.addRubbleColumnWithHole(settings.sceneWidthBlocks() / 2, settings.sceneHeightBlocks() / 2);
+        game = nTetris;
     }
 
     @Override

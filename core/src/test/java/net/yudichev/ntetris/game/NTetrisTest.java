@@ -53,8 +53,7 @@ class NTetrisTest {
         tetris.initialiseFromPrettyPrint(gameTime, scenario, null, null);
         startGameTime();
 
-        advanceGameTimeBy(DROP_STEP_DURATION_RUBBLE);
-        advanceGameTimeBy(DROP_STEP_DURATION_RUBBLE);
+        advanceGameTimeBy(DROP_STEP_DURATION_RUBBLE * 3);
 
         assertThat(tetris.prettyPrintRubble()).contains("" +
                 //                                                       W
@@ -104,23 +103,19 @@ class NTetrisTest {
             advanceGameTimeBy(1000.0 / 60);
         }
 
-        assertThat(tetris.prettyPrintRubble()).contains("" +
-                //                                                       W
-                "[   ][   ][   ][   ][   ][   ][   ][   ][   ][   ][   ][ O ][ O ][ O ][ O ][   ][   ][   ][   ][   ][   ][   ][   ][   ][   ]\n" +
-                "[   ][   ][   ][   ][   ][   ][   ][   ][   ][ O ][ O ][   ][<10][<11][<12][   ][   ][   ][   ][   ][   ][   ][   ][   ][   ]\n" +
-                "[   ][   ][   ][   ][   ][   ][   ][   ][   ][   ][   ][ O ][ O ][   ][<12][   ][   ][   ][   ][   ][   ][   ][   ][   ][   ]\n" +
-                "[   ][   ][   ][   ][   ][   ][   ][   ][   ][ O ][ O ][ O ][ O ][ O ][   ][   ][   ][   ][   ][   ][   ][   ][   ][   ][   ]\n" +
-                "[   ][   ][   ][   ][   ][   ][   ][   ][   ][   ][   ][ O ][   ][   ][   ][   ][   ][   ][   ][   ][   ][   ][   ][   ][   ]\n" +
-                "[   ][   ][   ][   ][   ][   ][   ][   ][   ][ O ][ O ][ O ][   ][   ][   ][   ][   ][   ][   ][   ][   ][   ][   ][   ][   ]\n" +
-                "[   ][   ][   ][   ][   ][   ][   ][   ][   ][ O ][ O ][ O ][ O ][   ][   ][   ][   ][   ][   ][   ][   ][   ][   ][   ][   ]\n" +
-                "[   ][   ][   ][   ][   ][   ][   ][   ][   ][ O ][ O ][ O ][ O ][   ][   ][   ][   ][   ][   ][   ][   ][   ][   ][   ][   ]\n" +
-                "[   ][   ][   ][   ][   ][   ][   ][   ][   ][ O ][ O ][ O ][ O ][   ][ O ][   ][   ][   ][   ][   ][   ][   ][   ][   ][   ]\n" +
-                "[   ][   ][   ][   ][   ][   ][   ][   ][   ][   ][ O ][ O ][ O ][ O ][ O ][   ][   ][   ][   ][   ][   ][   ][   ][   ][   ]\n" +
-                "[   ][   ][   ][   ][   ][   ][   ][   ][   ][   ][ O ][   ][<10][<11][<12][   ][   ][   ][   ][   ][   ][   ][   ][   ][   ]\n" +
-                "[   ][   ][   ][   ][   ][   ][   ][   ][   ][ O ][ O ][   ][<10][   ][   ][   ][   ][   ][   ][   ][   ][   ][   ][   ][   ]\n" +
-                "[   ][   ][   ][   ][   ][   ][   ][   ][   ][ O ][ O ][   ][   ][   ][   ][   ][   ][   ][   ][   ][   ][   ][   ][   ][   ]\n" +
-                "[   ][   ][   ][   ][   ][   ][   ][   ][   ][ O ][ O ][   ][<10][<11][<12][   ][   ][   ][   ][   ][   ][   ][   ][   ][   ]\n" +
-                "[   ][   ][   ][   ][   ][   ][   ][   ][   ][ O ][ O ][ O ][ O ][   ][   ][   ][   ][   ][   ][   ][   ][   ][   ][   ][   ]"
+        assertThat(tetris.prettyPrintRubble()).contains("\n" +
+                "[   ][   ][   ][   ][   ][   ][   ][ O ][   ][ O ][ O ][   ][   ][   ][   ][   ][   ][   ][   ][   ]\n" +
+                "[   ][   ][   ][   ][   ][   ][ O ][ O ][ O ][ O ][   ][   ][   ][   ][   ][   ][   ][   ][   ][   ]\n" +
+                "[   ][   ][   ][   ][   ][   ][   ][ O ][ O ][ O ][   ][   ][   ][   ][   ][   ][   ][   ][   ][   ]\n" +
+                "[   ][   ][   ][   ][   ][   ][   ][ O ][ O ][   ][ O ][ O ][   ][   ][   ][   ][   ][   ][   ][   ]\n" +
+                "[   ][   ][   ][   ][   ][   ][ O ][ O ][ O ][ O ][ O ][ O ][ O ][   ][   ][   ][   ][   ][   ][   ]\n" +
+                "[   ][   ][   ][   ][   ][   ][   ][   ][ O ][ O ][ O ][ O ][   ][   ][   ][   ][   ][   ][   ][   ]\n" +
+                "[   ][   ][   ][   ][   ][   ][   ][   ][ O ][ O ][ O ][ O ][   ][   ][   ][   ][   ][   ][   ][   ]\n" +
+                "[   ][   ][   ][   ][   ][   ][ O ][ O ][ O ][   ][   ][ O ][   ][   ][   ][   ][   ][   ][   ][   ]\n" +
+                "[   ][   ][   ][   ][   ][ O ][ O ][ O ][ O ][ O ][ O ][ O ][ O ][   ][   ][   ][   ][   ][   ][   ]\n" +
+                "[   ][   ][   ][   ][   ][   ][ O ][   ][ O ][ O ][   ][   ][   ][   ][   ][   ][   ][   ][   ][   ]\n" +
+                "[   ][   ][   ][   ][   ][   ][   ][   ][   ][ O ][   ][   ][   ][   ][   ][   ][   ][   ][   ][   ]\n" +
+                "[   ][   ][   ][   ][   ][   ][   ][   ][   ][ O ][   ][   ][   ][   ][   ][   ][   ][   ][   ][   ]"
         );
     }
 
@@ -160,9 +155,9 @@ class NTetrisTest {
                 "[   ][   ][   ][   ][   ][<03][   ][   ][   ][   ][   ][   ]\n"   // 5
         );
 
-        // should be 2 rubbles steps (as two columns collapsed) (+ 1 frame for good measure) before all the rubble is stopped
-        advanceGameTimeBy(DROP_STEP_DURATION_RUBBLE);
-        assertThat(tetris.prettyPrintRubble()).contains("" +
+        // should be 2 rubble steps (as two columns collapsed) + 1 step to stop the rubble
+        advanceGameTimeBy(DROP_STEP_DURATION_RUBBLE * 3);
+        assertThat(tetris.prettyPrintRubble()).contains("\n" +
                 // 0    1    2    3    4    5    6    7    8    9   10   11
                 "[   ][   ][   ][   ][ O ][   ][ O ][   ][   ][   ][   ][   ]\n" + // 0
                 "[   ][   ][   ][   ][   ][ O ][   ][   ][   ][   ][   ][   ]\n" + // 1

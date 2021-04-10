@@ -53,19 +53,15 @@ class GameSceneTest {
 
         gameScene.dropShape(Player.RIGHT);
 
-        // two steps as need to move two columns
+        // three steps as need to move two columns + one step to stop all moving rubble
+        advanceTimeAndStartFrame(DROP_STEP_DURATION_RUBBLE);
+        moveRubble();
         advanceTimeAndStartFrame(DROP_STEP_DURATION_RUBBLE);
         moveRubble();
         advanceTimeAndStartFrame(DROP_STEP_DURATION_RUBBLE);
         moveRubble();
 
-        /*
-         * _ R _ _
-         * R R _ _
-         * R R _ _
-         * R _ _ _
-         */
-        assertThat(gameScene.prettyPrintRubble()).contains("" +
+        assertThat(gameScene.prettyPrintRubble()).contains("\n" +
                 "[   ][ O ][   ][   ]\n" +
                 "[ O ][ O ][   ][   ]\n" +
                 "[ O ][ O ][   ][   ]\n" +
@@ -120,6 +116,8 @@ class GameSceneTest {
         moveRubble();
         advanceTimeAndStartFrame(DROP_STEP_DURATION_RUBBLE);
         moveRubble();
+        advanceTimeAndStartFrame(DROP_STEP_DURATION_RUBBLE);
+        moveRubble();
 
         assertThat(gameScene.prettyPrintRubble()).contains("\n" +
                 "[   ][   ][   ][   ][   ][ O ]\n" +
@@ -153,6 +151,8 @@ class GameSceneTest {
 
         gameScene.dropShape(Player.RIGHT);
 
+        advanceTimeAndStartFrame(DROP_STEP_DURATION_RUBBLE);
+        moveRubble();
         advanceTimeAndStartFrame(DROP_STEP_DURATION_RUBBLE);
         moveRubble();
 

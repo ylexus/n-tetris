@@ -1,5 +1,4 @@
 Configuration:
-  name: Automator
   appenders:
     Console:
       name: STDOUT

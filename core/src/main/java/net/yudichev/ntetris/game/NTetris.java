@@ -60,8 +60,6 @@ public final class NTetris implements Game {
 
         staticScene = new StaticScene(sceneWidthBlocks, sceneHeightBlocks, canvas);
         journal.settings(settings);
-
-        addRubbleColumnWithHole(settings.sceneWidthBlocks() / 2, settings.sceneHeightBlocks() / 2);
     }
 
     public void addRubbleColumnWithHole(int x, int holeIndex) {
