@@ -5,7 +5,11 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.GL20;
 import net.yudichev.ntetris.canvas.GdxGameCanvas;
 import net.yudichev.ntetris.game.NTetris;
+import net.yudichev.ntetris.journal.FileJournal;
 import net.yudichev.ntetris.sound.GdxSounds;
+
+import java.nio.file.Paths;
+import java.util.Random;
 
 public class GdxGame extends ApplicationAdapter {
     private double gameTimeMillis = Float.MIN_VALUE;
@@ -15,7 +19,7 @@ public class GdxGame extends ApplicationAdapter {
 
     @Override
     public void create() {
-        int height = 15;
+        int height = 12;
         Settings settings = Settings.builder()
                 .setSceneHeightBlocks(height)
                 .setSceneWidthBlocks(height * 5 / 3)
@@ -23,9 +27,14 @@ public class GdxGame extends ApplicationAdapter {
 
         canvas = new GdxGameCanvas(settings);
         sounds = new GdxSounds();
-        NTetris tetris = new NTetris(settings, canvas, sounds, new GdxControlState());
-        tetris.addRubbleColumnWithHole(settings.sceneWidthBlocks() / 2, settings.sceneHeightBlocks() / 2);
-        game = tetris;
+        Random random = new Random();
+        game = new NTetris(settings,
+                canvas,
+                sounds,
+                new GdxControlState(),
+//                new NoopGameJournal(),
+                new FileJournal(Paths.get("journal.txt")), // TODO remove
+                random::nextInt);
     }
 
     @Override

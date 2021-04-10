@@ -1,10 +1,8 @@
 package net.yudichev.ntetris.game;
 
-import net.yudichev.ntetris.ControlState;
-import net.yudichev.ntetris.Game;
-import net.yudichev.ntetris.GameControl;
-import net.yudichev.ntetris.Settings;
+import net.yudichev.ntetris.*;
 import net.yudichev.ntetris.canvas.GameCanvas;
+import net.yudichev.ntetris.journal.GameJournal;
 import net.yudichev.ntetris.sound.Sounds;
 import net.yudichev.ntetris.util.Nullable;
 import org.slf4j.Logger;
@@ -14,7 +12,6 @@ import java.util.EnumMap;
 import java.util.Map;
 import java.util.function.Consumer;
 
-import static java.text.MessageFormat.format;
 import static net.yudichev.ntetris.sound.Sounds.Sample.RUBBLE_COLLAPSE;
 import static net.yudichev.ntetris.util.Preconditions.checkArgument;
 import static net.yudichev.ntetris.util.Preconditions.checkNotNull;
@@ -26,18 +23,28 @@ public final class NTetris implements Game {
     private final GameCanvas canvas;
     private final Sounds sounds;
     private final ControlState controlState;
+    private final GameJournal journal;
+    private final RandomNumberGenerator randomNumberGenerator;
     private final GameScene gameScene;
     private final EffectScene effectScene;
+    private final StaticScene staticScene;
     private Map<Player, PlayerBlock> blockByPlayer;
     private boolean gameOver;
     private boolean paused;
     private double lastPausedTime = Double.MIN_VALUE;
     private double totalPausedTimeSpan;
 
-    public NTetris(Settings settings, GameCanvas canvas, Sounds sounds, ControlState controlState) {
+    public NTetris(Settings settings,
+                   GameCanvas canvas,
+                   Sounds sounds,
+                   ControlState controlState,
+                   GameJournal journal,
+                   RandomNumberGenerator randomNumberGenerator) {
         this.canvas = checkNotNull(canvas);
         this.sounds = checkNotNull(sounds);
         this.controlState = checkNotNull(controlState);
+        this.journal = checkNotNull(journal);
+        this.randomNumberGenerator = checkNotNull(randomNumberGenerator);
         int sceneWidthBlocks = settings.sceneWidthBlocks();
         int sceneHeightBlocks = settings.sceneHeightBlocks();
 
@@ -50,6 +57,11 @@ public final class NTetris implements Game {
                     this.sounds.play(RUBBLE_COLLAPSE);
                     effectScene.collapseRubble(colIdx, gameTime);
                 });
+
+        staticScene = new StaticScene(sceneWidthBlocks, sceneHeightBlocks, canvas);
+        journal.settings(settings);
+
+        addRubbleColumnWithHole(settings.sceneWidthBlocks() / 2, settings.sceneHeightBlocks() / 2);
     }
 
     public void addRubbleColumnWithHole(int x, int holeIndex) {
@@ -58,6 +70,7 @@ public final class NTetris implements Game {
 
     @Override
     public void render(double realGameTime) {
+        journal.beginFrame(realGameTime);
         canvas.beginFrame();
 
         double gameTime = offsetGameTime(realGameTime);
@@ -65,7 +78,7 @@ public final class NTetris implements Game {
         if (blockByPlayer == null) {
             blockByPlayer = new EnumMap<>(Player.class);
             for (Player player : Player.ALL_PLAYERS) {
-                blockByPlayer.put(player, new PlayerBlock(player, gameScene, gameTime));
+                blockByPlayer.put(player, new PlayerBlock(player, gameScene, journal, randomNumberGenerator, gameTime));
             }
         }
 
@@ -82,7 +95,7 @@ public final class NTetris implements Game {
 
                 boolean failed = gameScene.moveRubble();
                 if (failed) {
-                    throw new IllegalStateException(format("{0}: Stuck resolving rubble fall, rubble:{1}", gameTime, gameScene.prettyPrintRubble()));
+                    throw new RuntimeException("Stuck resolving rubble: " + gameScene.prettyPrintRubble());
                 }
 
                 for (int i = 0; i < Player.ALL_PLAYERS.length; i++) {
@@ -103,6 +116,7 @@ public final class NTetris implements Game {
             forEachPlayer(PlayerBlock::gameOver);
         }
 
+        staticScene.render(gameTime);
         forEachPlayer(playerBlock -> playerBlock.render(canvas));
         gameScene.render(canvas);
         effectScene.render(gameTime);
@@ -122,11 +136,11 @@ public final class NTetris implements Game {
         blockByPlayer = new EnumMap<>(Player.class);
         if (leftPlayerShape != null) {
             checkArgument(gameScene.attemptAddPlayerShape(Player.LEFT, leftPlayerShape));
-            blockByPlayer.put(Player.LEFT, new PlayerBlock(Player.LEFT, gameScene, gameTime));
+            blockByPlayer.put(Player.LEFT, new PlayerBlock(Player.LEFT, gameScene, journal, randomNumberGenerator, gameTime));
         }
         if (rightPlayerShape != null) {
             checkArgument(gameScene.attemptAddPlayerShape(Player.RIGHT, rightPlayerShape));
-            blockByPlayer.put(Player.RIGHT, new PlayerBlock(Player.RIGHT, gameScene, gameTime));
+            blockByPlayer.put(Player.RIGHT, new PlayerBlock(Player.RIGHT, gameScene, journal, randomNumberGenerator, gameTime));
         }
     }
 
@@ -164,7 +178,8 @@ public final class NTetris implements Game {
     }
 
     private void processKeys(double gameTimeMillis) {
-        controlState.forAllPressedKeys(gameTimeMillis, gameControl -> {
+        controlState.forAllActiveControls(gameTimeMillis, gameControl -> {
+            journal.gameControlActive(gameControl);
             if (gameControl == GameControl.PAUSE) {
                 paused = !paused;
             }

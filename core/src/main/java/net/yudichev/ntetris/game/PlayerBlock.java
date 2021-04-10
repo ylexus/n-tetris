@@ -1,8 +1,9 @@
 package net.yudichev.ntetris.game;
 
+import net.yudichev.ntetris.RandomNumberGenerator;
 import net.yudichev.ntetris.canvas.GameCanvas;
+import net.yudichev.ntetris.journal.GameJournal;
 
-import java.util.Random;
 import java.util.function.IntFunction;
 
 import static net.yudichev.ntetris.canvas.Sprite.LEFT_PLAYER_NORMAL;
@@ -11,12 +12,14 @@ import static net.yudichev.ntetris.game.GameConstants.*;
 import static net.yudichev.ntetris.game.GameScene.ShapeLoweringResult;
 import static net.yudichev.ntetris.util.Preconditions.checkNotNull;
 
+// TODO a drop must add a full cycle for post-drop positioning, UNLESS the drop did not change the position to avoid cheating
 final class PlayerBlock extends GameBlock<PlayerShape> {
 
     private static final PlayerShapeType[] ALL_SHAPE_TYPES = PlayerShapeType.values();
 
-    private final Random random = new Random();
     private final GameScene gameScene;
+    private final GameJournal journal;
+    private final RandomNumberGenerator randomNumberGenerator;
     /**
      * -1 means no deadline
      */
@@ -24,10 +27,12 @@ final class PlayerBlock extends GameBlock<PlayerShape> {
     private double penaltyDeadline = Double.MIN_VALUE;
     private boolean gameOver;
 
-    PlayerBlock(Player player, GameScene gameScene, double creationGameTime) {
+    PlayerBlock(Player player, GameScene gameScene, GameJournal journal, RandomNumberGenerator randomNumberGenerator, double creationGameTime) {
         super(player == Player.LEFT ? LEFT_PLAYER_NORMAL : RIGHT_PLAYER_NORMAL, creationGameTime);
         this.player = checkNotNull(player);
         this.gameScene = checkNotNull(gameScene);
+        this.journal = checkNotNull(journal);
+        this.randomNumberGenerator = checkNotNull(randomNumberGenerator);
     }
 
     public boolean lower() {
@@ -107,7 +112,9 @@ final class PlayerBlock extends GameBlock<PlayerShape> {
     }
 
     private boolean attemptToSpawnNewShape(Player player) {
-        PlayerShapeType shape = ALL_SHAPE_TYPES[random.nextInt(ALL_SHAPE_TYPES.length)];
+        int idx = randomNumberGenerator.nextInt(ALL_SHAPE_TYPES.length);
+        journal.randomNextInt(ALL_SHAPE_TYPES.length, idx);
+        PlayerShapeType shape = ALL_SHAPE_TYPES[idx];
         int horizontalOffset;
         int horizontalSpeed;
         switch (player) {
@@ -158,7 +165,8 @@ final class PlayerBlock extends GameBlock<PlayerShape> {
         if (numberOfEmptySlots == 0) {
             return -1;
         }
-        int candidateFreeIdx = random.nextInt(numberOfEmptySlots);
+        int candidateFreeIdx = randomNumberGenerator.nextInt(numberOfEmptySlots);
+        journal.randomNextInt(numberOfEmptySlots, candidateFreeIdx);
         int i;
         int j = 0;
         for (i = 0; i < slots.length; i++) {

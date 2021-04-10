@@ -13,6 +13,8 @@ import java.util.function.IntUnaryOperator;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.util.stream.Collectors.toList;
+import static net.yudichev.ntetris.game.RubbleMoveResultFlags.withMoved;
+import static net.yudichev.ntetris.game.RubbleMoveResultFlags.withRequiresMoreMoves;
 import static net.yudichev.ntetris.util.Preconditions.*;
 
 /**
@@ -38,7 +40,7 @@ import static net.yudichev.ntetris.util.Preconditions.*;
  */
 final class GameScene {
     private static final Logger logger = LoggerFactory.getLogger(GameScene.class);
-    // leftmost row first, column indexes from top to bottom
+    // top row first, column indexes from left to right
     private final List<List<RubbleBlock>> rubbleRows;
     private final int width;
     private final int height;
@@ -161,7 +163,8 @@ final class GameScene {
     /**
      * @return true if the shape moved
      */
-    public boolean moveRubble(RubbleShape shape) {
+    public int moveRubble(RubbleShape shape) {
+        int result = 0;
         RubbleShape newShape = shape;
         if (shape.speedX() != 0) {
             int candidateX = shape.offsetX() + shape.speedX();
@@ -174,6 +177,7 @@ final class GameScene {
                 if (rubbleBlock != null) {
                     RubbleShape overlappingRubble = rubbleBlock.getShape();
                     if (movingInSameDirection(shape, overlappingRubble)) {
+                        result = withRequiresMoreMoves(result);
                         logger.debug("{} moving in same dir as rubble {}, another calc needed", shape, overlappingRubble);
                     } else {
                         logger.debug("{} hit rubble {}, stopped", shape, overlappingRubble);
@@ -183,6 +187,7 @@ final class GameScene {
                     PlayerShape overlappingPlayerShape = playerShapeWithElementAt(candidateX, shape.offsetY(), shape.speedX());
                     if (overlappingPlayerShape != null) {
                         if (movingInSameDirection(shape, overlappingPlayerShape)) {
+                            result = withRequiresMoreMoves(result);
                             logger.debug("{} moving in same dir as player {}, another calc needed", shape, overlappingPlayerShape);
                         } else {
                             logger.debug("{} hit player {}, stopped", shape, overlappingPlayerShape);
@@ -197,6 +202,8 @@ final class GameScene {
             }
         }
         if (newShape != shape) {
+            result = withMoved(result);
+
             logger.debug("Clear1 {}", shape);
             RubbleBlock block = rubbleRows.get(shape.offsetY()).set(shape.offsetX(), null);
             checkState(block.getShape() == shape, "expected %s but was %s", shape, block);
@@ -207,10 +214,8 @@ final class GameScene {
 
             int newShapePosition = newShape.offsetX();
             newShape.fallCausedBy().ifPresent(player -> maybeCollapseRubble(player, newShapePosition, 1));
-
-            return true;
         }
-        return false;
+        return result;
     }
 
     public void rotatePlayersShape(Player player) {

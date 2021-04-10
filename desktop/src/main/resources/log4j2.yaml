@@ -3,8 +3,6 @@ Configuration:
   appenders:
     Console:
       name: STDOUT
-      ThresholdFilter:
-        level: INFO
       PatternLayout:
         Pattern: "%d{ISO8601}{GMT} %p [%t] %C{1.} %m%n"
     RollingFile:
@@ -22,7 +20,7 @@ Configuration:
 
   Loggers:
     Root:
-      level: debug
+      level: off
       includeLocation: true
       AppenderRef:
         - ref: STDOUT

@@ -36,7 +36,7 @@ abstract class GameBlock<S extends Shape<S>> {
 
     protected void renderShape(GameCanvas canvas, S destinationShape) {
         double transitionProportion = timeSinceLastMove / DROP_TRANSITION_STEP_DURATION;
-        logger.debug("render {} src {} dest {}, proportion {}", sprite, sourceShapeWhenTransitioning, destinationShape, transitionProportion);
+        logger.trace("render {} src {} dest {}, proportion {}", sprite, sourceShapeWhenTransitioning, destinationShape, transitionProportion);
         for (int patternY = 0; patternY < destinationShape.height(); patternY++) {
             Row row = destinationShape.pattern().getRows().get(patternY);
             for (int patternX = 0; patternX < row.getElements().length; patternX++) {
@@ -47,12 +47,12 @@ abstract class GameBlock<S extends Shape<S>> {
                         // extrapolate transition
                         int sourceAbsY = sourceShapeWhenTransitioning.toAbsoluteY(patternY);
                         int sourceAbsX = sourceShapeWhenTransitioning.toAbsoluteX(patternX);
-                        logger.debug("render {} trans from {}, {} -> {}, {}", sprite, sourceAbsX, sourceAbsY, targetAbsX, targetAbsY);
+                        logger.trace("render {} trans from {}, {} -> {}, {}", sprite, sourceAbsX, sourceAbsY, targetAbsX, targetAbsY);
                         targetAbsX = sourceAbsX + (targetAbsX - sourceAbsX) * transitionProportion;
                         targetAbsY = sourceAbsY + (targetAbsY - sourceAbsY) * transitionProportion;
-                        logger.debug("render {} trans to {}, {}", sprite, targetAbsX, targetAbsY);
+                        logger.trace("render {} trans to {}, {}", sprite, targetAbsX, targetAbsY);
                     }
-                    logger.debug("render {} block {},{} at {}, {}", sprite, patternX, patternY, targetAbsX, targetAbsY);
+                    logger.trace("render {} block {},{} at {}, {}", sprite, patternX, patternY, targetAbsX, targetAbsY);
                     canvas.renderBlock(targetAbsX, targetAbsY, sprite, 1.0);
                 }
             }

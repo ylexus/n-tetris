@@ -5,6 +5,8 @@ import net.yudichev.ntetris.canvas.Sprite;
 
 import static net.yudichev.ntetris.game.GameConstants.DROP_STEP_DURATION_RUBBLE;
 import static net.yudichev.ntetris.game.GameConstants.DROP_TRANSITION_STEP_DURATION;
+import static net.yudichev.ntetris.game.RubbleMoveResultFlags.isMoved;
+import static net.yudichev.ntetris.game.RubbleMoveResultFlags.requiresMoreMoves;
 import static net.yudichev.ntetris.util.Preconditions.checkNotNull;
 
 final class RubbleBlock extends GameBlock<RubbleShape> {
@@ -36,17 +38,20 @@ final class RubbleBlock extends GameBlock<RubbleShape> {
         long outstandingDropSteps = (long) (timeSinceLastMove / DROP_STEP_DURATION_RUBBLE);
         logger.debug("{}: rubble {}: timeSinceLastMove {}, lastMoveTime {}", gameTime, shape, timeSinceLastMove, lastMoveTime);
         boolean moved = false;
+        boolean requiresMoreMoves;
         if (outstandingDropSteps > 0) {
-            boolean movedOnThisStep;
             do {
                 logger.debug("{}: rubble {}: outstanding steps {}", gameTime, shape, outstandingDropSteps);
-                movedOnThisStep = gameScene.moveRubble(shape);
-                moved |= movedOnThisStep;
-            } while (--outstandingDropSteps > 0);
-            logger.debug("{}: rubble {}: moved={}", gameTime, shape, moved);
-            lastMoveTime = gameTime;
-            sourceShapeWhenTransitioning = shape;
-            timeSinceLastMove = 0;
+                int result = gameScene.moveRubble(shape);
+                requiresMoreMoves = requiresMoreMoves(result);
+                moved |= isMoved(result);
+            } while (!requiresMoreMoves && --outstandingDropSteps > 0);
+            logger.debug("{}: rubble {}: moved={}, requiresMoreMoves={}", gameTime, shape, moved, requiresMoreMoves);
+            if (!requiresMoreMoves) {
+                lastMoveTime = gameTime;
+                sourceShapeWhenTransitioning = shape;
+                timeSinceLastMove = 0;
+            }
         } else {
             // stop transition if needed
             if (timeSinceLastMove >= DROP_TRANSITION_STEP_DURATION) {

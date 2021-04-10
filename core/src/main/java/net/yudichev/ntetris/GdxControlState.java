@@ -72,19 +72,19 @@ final class GdxControlState implements ControlState {
     }
 
     @Override
-    public void forAllPressedKeys(double gameTimeMillis, Consumer<GameControl> activeControlConsumer) {
+    public void forAllActiveControls(double gameTime, Consumer<GameControl> activeControlConsumer) {
         queue.forEach(gameControl -> {
             activeControlConsumer.accept(gameControl);
-            timeKeyLastProcessedByGameControl.put(gameControl, gameTimeMillis);
+            timeKeyLastProcessedByGameControl.put(gameControl, gameTime);
         });
 
         pressedKeys.forEach(keyCode -> {
             if (!unrepeatableGameControls.contains(keyCode) && !queue.contains(keyCode)) {
                 double timeKeysLastProcessed = timeKeyLastProcessedByGameControl.getOrDefault(keyCode, ZERO);
-                if (gameTimeMillis - timeKeysLastProcessed > KEY_PROCESSING_PERIOD) {
+                if (gameTime - timeKeysLastProcessed > KEY_PROCESSING_PERIOD) {
                     logger.debug("repeat {}", keyCode);
                     activeControlConsumer.accept(keyCode);
-                    timeKeyLastProcessedByGameControl.put(keyCode, gameTimeMillis);
+                    timeKeyLastProcessedByGameControl.put(keyCode, gameTime);
                 }
             }
         });

@@ -8,7 +8,7 @@ Configuration:
 
   Loggers:
     Root:
-      level: info
+      level: off
       includeLocation: true
       AppenderRef:
         - ref: STDOUT
