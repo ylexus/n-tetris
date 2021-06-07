@@ -20,6 +20,7 @@ final class PlayerBlock extends GameBlock<PlayerShape> {
     private final GameScene gameScene;
     private final GameJournal journal;
     private final RandomNumberGenerator randomNumberGenerator;
+    private final GameVariables gameVariables;
     /**
      * -1 means no deadline
      */
@@ -27,17 +28,23 @@ final class PlayerBlock extends GameBlock<PlayerShape> {
     private double penaltyDeadline = Double.MIN_VALUE;
     private boolean gameOver;
 
-    PlayerBlock(Player player, GameScene gameScene, GameJournal journal, RandomNumberGenerator randomNumberGenerator, double creationGameTime) {
+    PlayerBlock(Player player,
+                GameScene gameScene,
+                GameJournal journal,
+                RandomNumberGenerator randomNumberGenerator,
+                GameVariables gameVariables,
+                double creationGameTime) {
         super(player == Player.LEFT ? LEFT_PLAYER_NORMAL : RIGHT_PLAYER_NORMAL, creationGameTime);
         this.player = checkNotNull(player);
         this.gameScene = checkNotNull(gameScene);
         this.journal = checkNotNull(journal);
         this.randomNumberGenerator = checkNotNull(randomNumberGenerator);
+        this.gameVariables = checkNotNull(gameVariables);
     }
 
     public boolean lower() {
         @SuppressWarnings("NumericCastThatLosesPrecision") // exactly what's intended - to get the floor
-        long outstandingDropSteps = (long) (timeSinceLastMove / DROP_STEP_DURATION_PLAYER);
+        long outstandingDropSteps = (long) (timeSinceLastMove / (INITIAL_DROP_STEP_DURATION_PLAYER / gameVariables.getSpeedMultiplier()));
         logger.debug("{}: {}:  timeSinceLastMove {}", gameTime, player, timeSinceLastMove);
         if (outstandingDropSteps > 0) {
             lastMoveTime = gameTime;

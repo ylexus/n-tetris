@@ -5,7 +5,7 @@
       <profile name="Gradle Imported" enabled="true">
         <outputRelativeToContentRoot value="true" />
         <processorPath useClasspath="false">
-          <entry name="$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.immutables/value/2.8.8/d99fa1e04af5a1fda42fa9412d68eb7fe17a1071/value-2.8.8.jar" />
+          <entry name="$MAVEN_REPOSITORY$/org/immutables/value/2.8.8/value-2.8.8.jar" />
         </processorPath>
         <module name="n-tetris.core.main" />
         <module name="n-tetris.core.test" />

@@ -12,7 +12,6 @@ import java.util.function.IntUnaryOperator;
 
 import static java.lang.Math.max;
 import static java.lang.Math.min;
-import static java.util.stream.Collectors.toList;
 import static net.yudichev.ntetris.game.RubbleMoveResultFlags.withMoved;
 import static net.yudichev.ntetris.game.RubbleMoveResultFlags.withRequiresMoreMoves;
 import static net.yudichev.ntetris.util.Preconditions.*;
@@ -132,14 +131,6 @@ final class GameScene {
 
     public Map<Player, PlayerShape> getPlayerShapesByPlayer() {
         return unmodifiablePlayerShapesByPlayer;
-    }
-
-    List<List<RubbleShape>> getRubbleRows() {
-        return rubbleRows.stream()
-                .map(row -> row.stream()
-                        .map(rubbleBlock -> rubbleBlock == null ? null : rubbleBlock.getShape())
-                        .collect(toList()))
-                .collect(toList());
     }
 
     @Nullable

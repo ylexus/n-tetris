@@ -6,8 +6,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import static net.yudichev.ntetris.game.GameConstants.DROP_STEP_DURATION_PLAYER;
-import static net.yudichev.ntetris.game.GameConstants.DROP_STEP_DURATION_RUBBLE;
+import static net.yudichev.ntetris.game.GameConstants.INITIAL_DROP_STEP_DURATION_PLAYER;
+import static net.yudichev.ntetris.game.GameConstants.INITIAL_DROP_STEP_DURATION_RUBBLE;
 import static net.yudichev.ntetris.game.RectangularPattern.pattern;
 import static net.yudichev.ntetris.game.Row.row;
 import static net.yudichev.ntetris.game.ShapeConstants.X;
@@ -54,11 +54,11 @@ class GameSceneTest {
         gameScene.dropShape(Player.RIGHT);
 
         // three steps as need to move two columns + one step to stop all moving rubble
-        advanceTimeAndStartFrame(DROP_STEP_DURATION_RUBBLE);
+        advanceTimeAndStartFrame(INITIAL_DROP_STEP_DURATION_RUBBLE);
         moveRubble();
-        advanceTimeAndStartFrame(DROP_STEP_DURATION_RUBBLE);
+        advanceTimeAndStartFrame(INITIAL_DROP_STEP_DURATION_RUBBLE);
         moveRubble();
-        advanceTimeAndStartFrame(DROP_STEP_DURATION_RUBBLE);
+        advanceTimeAndStartFrame(INITIAL_DROP_STEP_DURATION_RUBBLE);
         moveRubble();
 
         assertThat(gameScene.prettyPrintRubble()).contains("\n" +
@@ -101,7 +101,7 @@ class GameSceneTest {
                 "[   ][   ][   ][ O ][ O ][ O ]\n" +
                 "[   ][   ][   ][ O ][ O ][ O ]\n");
 
-        advanceTimeAndStartFrame(DROP_STEP_DURATION_PLAYER);
+        advanceTimeAndStartFrame(INITIAL_DROP_STEP_DURATION_PLAYER);
         gameScene.dropShape(Player.LEFT);
 
         assertThat(gameScene.prettyPrintRubble()).contains("" +
@@ -112,11 +112,11 @@ class GameSceneTest {
                 "[   ][   ][   ][   ][   ][ O ]\n" +
                 "[   ][   ][   ][   ][   ][ O ]");
 
-        advanceTimeAndStartFrame(DROP_STEP_DURATION_RUBBLE);
+        advanceTimeAndStartFrame(INITIAL_DROP_STEP_DURATION_RUBBLE);
         moveRubble();
-        advanceTimeAndStartFrame(DROP_STEP_DURATION_RUBBLE);
+        advanceTimeAndStartFrame(INITIAL_DROP_STEP_DURATION_RUBBLE);
         moveRubble();
-        advanceTimeAndStartFrame(DROP_STEP_DURATION_RUBBLE);
+        advanceTimeAndStartFrame(INITIAL_DROP_STEP_DURATION_RUBBLE);
         moveRubble();
 
         assertThat(gameScene.prettyPrintRubble()).contains("\n" +
@@ -151,9 +151,9 @@ class GameSceneTest {
 
         gameScene.dropShape(Player.RIGHT);
 
-        advanceTimeAndStartFrame(DROP_STEP_DURATION_RUBBLE);
+        advanceTimeAndStartFrame(INITIAL_DROP_STEP_DURATION_RUBBLE);
         moveRubble();
-        advanceTimeAndStartFrame(DROP_STEP_DURATION_RUBBLE);
+        advanceTimeAndStartFrame(INITIAL_DROP_STEP_DURATION_RUBBLE);
         moveRubble();
 
         assertThat(gameScene.prettyPrintRubble()).contains("\n" +

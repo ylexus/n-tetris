@@ -28,6 +28,8 @@ public final class NTetris implements Game {
     private final GameScene gameScene;
     private final EffectScene effectScene;
     private final StaticScene staticScene;
+    private final GameVariables variables;
+
     private Map<Player, PlayerBlock> blockByPlayer;
     private boolean gameOver;
     private boolean paused;
@@ -60,6 +62,8 @@ public final class NTetris implements Game {
 
         staticScene = new StaticScene(sceneWidthBlocks, sceneHeightBlocks, canvas);
         journal.settings(settings);
+
+        variables = new GameVariables(settings);
     }
 
     public void addRubbleColumnWithHole(int x, int holeIndex) {
@@ -73,10 +77,12 @@ public final class NTetris implements Game {
 
         double gameTime = offsetGameTime(realGameTime);
 
+        variables.accelerateSpeed(gameTime);
+
         if (blockByPlayer == null) {
             blockByPlayer = new EnumMap<>(Player.class);
             for (Player player : Player.ALL_PLAYERS) {
-                blockByPlayer.put(player, new PlayerBlock(player, gameScene, journal, randomNumberGenerator, gameTime));
+                blockByPlayer.put(player, new PlayerBlock(player, gameScene, journal, randomNumberGenerator, variables, gameTime));
             }
         }
 
@@ -134,11 +140,11 @@ public final class NTetris implements Game {
         blockByPlayer = new EnumMap<>(Player.class);
         if (leftPlayerShape != null) {
             checkArgument(gameScene.attemptAddPlayerShape(Player.LEFT, leftPlayerShape));
-            blockByPlayer.put(Player.LEFT, new PlayerBlock(Player.LEFT, gameScene, journal, randomNumberGenerator, gameTime));
+            blockByPlayer.put(Player.LEFT, new PlayerBlock(Player.LEFT, gameScene, journal, randomNumberGenerator, variables, gameTime));
         }
         if (rightPlayerShape != null) {
             checkArgument(gameScene.attemptAddPlayerShape(Player.RIGHT, rightPlayerShape));
-            blockByPlayer.put(Player.RIGHT, new PlayerBlock(Player.RIGHT, gameScene, journal, randomNumberGenerator, gameTime));
+            blockByPlayer.put(Player.RIGHT, new PlayerBlock(Player.RIGHT, gameScene, journal, randomNumberGenerator, variables, gameTime));
         }
     }
 

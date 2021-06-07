@@ -3,8 +3,8 @@ package net.yudichev.ntetris.game;
 import net.yudichev.ntetris.canvas.GameCanvas;
 import net.yudichev.ntetris.canvas.Sprite;
 
-import static net.yudichev.ntetris.game.GameConstants.DROP_STEP_DURATION_RUBBLE;
 import static net.yudichev.ntetris.game.GameConstants.DROP_TRANSITION_STEP_DURATION;
+import static net.yudichev.ntetris.game.GameConstants.INITIAL_DROP_STEP_DURATION_RUBBLE;
 import static net.yudichev.ntetris.game.RubbleMoveResultFlags.isMoved;
 import static net.yudichev.ntetris.game.RubbleMoveResultFlags.requiresMoreMoves;
 import static net.yudichev.ntetris.util.Preconditions.checkNotNull;
@@ -35,7 +35,7 @@ final class RubbleBlock extends GameBlock<RubbleShape> {
      */
     public boolean move() {
         @SuppressWarnings("NumericCastThatLosesPrecision") // exactly what's intended
-        long outstandingDropSteps = (long) (timeSinceLastMove / DROP_STEP_DURATION_RUBBLE);
+        long outstandingDropSteps = (long) (timeSinceLastMove / INITIAL_DROP_STEP_DURATION_RUBBLE);
         logger.debug("{}: rubble {}: timeSinceLastMove {}, lastMoveTime {}", gameTime, shape, timeSinceLastMove, lastMoveTime);
         boolean moved = false;
         boolean requiresMoreMoves;
